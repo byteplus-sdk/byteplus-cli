@@ -1,0 +1,254 @@
+// Code generated for package structset by go-bindata DO NOT EDIT. (@generated)
+// sources:
+// byteplus-sdk-metadata/structure/iam/2018-01-01/structure.json
+package structset
+
+import (
+	"bytes"
+	"compress/gzip"
+	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
+)
+
+func bindataRead(data []byte, name string) ([]byte, error) {
+	gz, err := gzip.NewReader(bytes.NewBuffer(data))
+	if err != nil {
+		return nil, fmt.Errorf("Read %q: %v", name, err)
+	}
+
+	var buf bytes.Buffer
+	_, err = io.Copy(&buf, gz)
+	clErr := gz.Close()
+
+	if err != nil {
+		return nil, fmt.Errorf("Read %q: %v", name, err)
+	}
+	if clErr != nil {
+		return nil, err
+	}
+
+	return buf.Bytes(), nil
+}
+
+type asset struct {
+	bytes []byte
+	info  os.FileInfo
+}
+
+type bindataFileInfo struct {
+	name    string
+	size    int64
+	mode    os.FileMode
+	modTime time.Time
+}
+
+// Name return file name
+func (fi bindataFileInfo) Name() string {
+	return fi.name
+}
+
+// Size return file size
+func (fi bindataFileInfo) Size() int64 {
+	return fi.size
+}
+
+// Mode return file mode
+func (fi bindataFileInfo) Mode() os.FileMode {
+	return fi.mode
+}
+
+// Mode return file modify time
+func (fi bindataFileInfo) ModTime() time.Time {
+	return fi.modTime
+}
+
+// IsDir return file whether a directory
+func (fi bindataFileInfo) IsDir() bool {
+	return fi.mode&os.ModeDir != 0
+}
+
+// Sys return file is sys mode
+func (fi bindataFileInfo) Sys() interface{} {
+	return nil
+}
+
+var _byteplusSdkMetadataStructureIam20180101StructureJson = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xec\x9c\x4d\x6f\xea\x46\x14\x86\xd7\xe6\x57\x20\xaf\x13\x89\x74\x55\xb1\x43\x05\xa2\xb4\x90\x50\x48\xba\x1f\xec\x03\x99\xc6\xf6\xb8\x33\x63\x52\x14\xe5\xbf\x5f\xd9\x06\xc7\x36\x06\x73\x75\xcd\xd5\x35\xf3\x2e\x73\x8c\x70\x78\x74\xde\xf3\x31\x1f\xe7\xa3\x63\xd9\xb3\xb7\xf5\x23\xf3\xc9\xee\x77\x6d\xce\x7c\xfb\xa6\x63\xd9\x0b\x92\x1b\xee\x14\x4c\xff\x90\x54\x5c\x04\xb1\xe9\xb7\xde\xdd\xef\xb7\xbd\xbb\xdb\xde\x5d\xfa\x61\x2d\x23\x47\x47\x32\xfe\xf8\x47\xc7\xb2\xec\x81\xeb\xbe\x28\x92\xcf\xe2\x5e\x8a\x28\xdc\x59\x2d\x3b\xb6\x25\x96\xdd\xdb\x12\xab\x65\x3f\x6f\xc3\xe4\x45\x4a\x4b\x1e\xac\xe3\x6f\x8c\xad\x0f\x6a\x20\x25\xdb\xda\xfd\xee\x8a\x79\x8a\x32\xeb\x94\x85\x25\xdb\x94\x85\x4f\xcb\x7f\xc9\xd1\x13\xda\x90\x67\xf7\xbb\xbd\xec\xc3\xa9\xfd\xe0\x3b\x46\x41\xe4\x1f\x18\xff\x54\x22\x78\x8c\xfc\x25\xc9\xd2\xa3\x39\xfd\x17\x71\x49\xae\xdd\xef\x6a\x19\xed\xad\x63\x21\x7d\x16\x7f\xb5\xbd\xff\x8f\x67\x4c\x52\xa0\xf7\xbf\x26\xfb\x1d\x9a\xfc\xcc\x16\x9b\x3e\x6f\x32\x18\x66\x73\xe8\xec\x58\xd8\x03\xad\x99\xf3\x3a\x17\x1e\xcd\x84\xc7\x9d\x6d\xe6\x30\xe9\x9f\x66\x53\xba\xc9\x91\xd8\x3d\x31\x9a\x44\xec\x26\x66\x7b\x44\x49\x37\x59\x54\x85\x78\x20\x9e\x33\x92\x0e\x32\x70\x95\x82\x20\x1e\x88\x07\x15\xdb\xb9\xba\xf9\x43\x12\xd3\x34\x70\x1c\x52\xea\x2f\xda\x16\x2a\xfc\xd6\x22\xca\x9b\x1b\x63\x54\xec\x80\x86\xa4\x1c\xc9\x43\x9d\xf6\x51\xa6\x22\x4a\xe5\x34\xe4\x2a\xf4\x58\x7b\x63\x6c\x93\x2c\x90\x97\xab\xb4\x33\x11\x6b\x1e\xcc\xa4\x58\x71\x2f\x83\x62\x27\xc6\x81\xe7\x89\xf7\xe4\xbd\x25\x52\x4b\x21\x3c\x62\xc1\x2f\x8d\xaa\x49\xc7\x99\x31\xa5\xde\x85\xac\x20\x61\x8a\xcf\x14\x39\xcc\x49\x91\xce\xbd\xc2\x70\xf7\x58\xb0\x15\x0d\x22\xfd\x3a\xfa\x9f\xfc\x50\x0f\x23\xc9\xaa\x53\x0f\x0f\x34\xad\x49\x1a\xc7\x65\xec\xb1\x35\xbc\x64\x4f\xa3\xb5\x45\x7e\xd3\xa9\x18\x59\x38\x97\x85\x4b\x9d\x31\x4a\xd8\x72\x6f\x3c\x14\x4e\xe4\x53\xa0\x5b\x89\xa3\xf1\x95\x02\x68\x27\xa7\x9d\xb9\xc8\x55\xae\x50\xce\xf5\x34\x7f\xd8\xd0\x68\x9c\xc3\xb3\x8c\x94\xbe\x82\x88\x7a\x91\x65\xa4\xc5\x60\x3a\x99\x49\xb1\xe1\x6e\xf2\x6a\x04\x94\xb2\xf7\x8c\x02\x47\xb8\xe4\xc6\x9c\xa6\xa4\x99\xcb\x34\x6b\xb5\x17\x35\x28\xac\xbc\xef\x20\xd0\x58\xf6\x62\xf1\x54\xdd\xe9\xb4\xa1\x0b\x6e\x92\x83\x66\x3a\x52\xed\xc4\x70\x99\x20\x9b\x1e\x7a\x9a\xf0\xe0\x8d\xdc\x42\xe9\xb6\x7b\x62\xb6\x7a\x4a\xb4\xe2\x46\x19\xa9\xe8\x0a\x6b\xdb\x46\xd3\xb2\xcf\xb8\x67\x3c\x85\xa9\x58\x72\x8f\x66\xaf\x22\x80\x47\x60\x7d\x2d\x8b\xa3\x43\xf2\xa8\x6a\x17\x3d\xb3\x3c\x18\xbc\xaf\x53\xa2\x84\x93\xc4\xf5\x8c\x2a\xf7\x4b\xa1\xb7\x12\x25\x9c\xf4\xaa\x23\x54\x28\x7d\xb1\x3c\x55\xa2\x53\xb9\x14\x83\x1e\xfb\x08\xad\x42\x97\x80\x58\x94\xa3\x83\x3b\x0f\x35\x95\x22\x4e\x9e\x62\x8b\xe0\x88\x6e\x70\xe7\x01\xe2\xc1\xd9\xca\x1f\x55\x10\xc4\x03\xf1\x9c\x21\x1e\xb3\x3d\x22\xd3\xcd\x3d\x69\x2c\x42\xd4\x00\xc2\x0a\x44\x2d\x22\x04\x5d\x04\xdd\xb3\x1c\x05\xab\x30\x47\xd1\x60\x09\xe6\x6c\x54\x58\x7f\xa9\x46\x33\xe1\x4a\x67\xfb\x2c\xea\x3a\x08\x35\xb3\x4d\x57\x44\x94\x5c\x90\x4e\x4f\x43\x24\x01\x9a\x93\x42\x50\x3a\xcd\xaa\xb8\x38\x91\x07\x86\x8a\xf1\x34\xb5\x4a\x60\x60\x95\xb1\x1a\x05\x9a\x6b\x4e\x6a\x2c\xca\xbd\x7b\xf2\x64\x3b\xe6\x9e\xfe\x0a\xf7\xe6\xc1\x4a\x0b\xc9\x09\xf7\x79\xc5\xa1\x4f\x73\x8e\xb5\xa5\x18\x9e\x56\x2b\x45\xe0\x80\x0e\x0b\x1d\xd6\xb1\x78\x9a\xe4\xe2\xaf\x6c\x83\xc0\x81\xc0\x91\xe3\xf0\x77\x44\x72\xdb\x4a\xa5\x5c\xa0\x11\x48\xa5\x32\x16\xb2\xd0\x50\x42\x31\x27\x15\x63\x8c\xab\x40\x30\xd8\x32\x39\x12\x38\x0e\x7a\x3a\xc4\x0c\xc4\x8c\xdc\x25\x24\x47\xb4\xb4\x1c\xbd\x40\x92\x9d\x0b\x0f\x42\x41\x39\x8a\xec\x5a\xab\x94\xfc\x66\x0f\x14\x03\xc5\x9c\xf2\x95\xb8\x20\x83\x8f\xa0\xfc\x40\x50\x3d\x47\x28\x63\x21\x8b\xc7\x9c\x20\x18\x08\x06\xa7\x69\x8f\xe9\x66\x4e\xbe\xd8\x24\xb7\x5c\xc6\x52\xf8\x38\x20\x88\x65\x91\x7a\x9f\x79\x09\xdd\xca\xe9\xd9\xb8\xf7\x5b\x3b\x9b\xc4\x14\x0a\x25\x5f\x29\xc6\x95\x47\x7a\xc7\xbc\x8d\x2f\x5f\x89\x71\x70\x8c\xdc\xc8\xe1\x68\x7f\xe2\x41\xc9\x72\xe9\x90\x82\xe1\xea\xf5\xe7\x25\xda\x3c\x5c\xfd\x12\x20\x30\x5d\x1d\xd3\xd5\xbf\x83\x0b\xa6\xab\x5b\x98\xae\x8e\x2e\xf0\x64\x1a\x2e\x9d\xe3\x45\x69\x5f\xae\x65\x31\x11\xb8\x9a\x48\x6b\x55\xd4\x68\x61\xd2\x6e\x14\x97\x08\x28\x18\x39\x8f\xb1\x9c\xe7\x44\x91\x56\x5f\xde\x6a\x92\x45\xab\x41\x60\xfe\xfe\x4f\x09\xaa\x18\xbf\x5f\x1f\x50\xae\x6d\x02\x7f\xa3\x3d\x20\xee\xa6\x5f\xcf\x08\xfe\x46\x1d\x03\x33\xf8\x8b\x91\xb6\x70\xbd\x04\xdd\x30\x36\xba\x4e\xe7\x1c\x8c\x97\x4f\x41\x60\xc2\xfc\xc1\x06\x28\x34\x82\xf5\xd6\x5d\x7e\xe9\x58\x9f\x9d\xcf\x6f\x01\x00\x00\xff\xff\xe3\x9e\x82\xb2\xea\x8a\x00\x00")
+
+func byteplusSdkMetadataStructureIam20180101StructureJsonBytes() ([]byte, error) {
+	return bindataRead(
+		_byteplusSdkMetadataStructureIam20180101StructureJson,
+		"byteplus-sdk-metadata/structure/iam/2018-01-01/structure.json",
+	)
+}
+
+func byteplusSdkMetadataStructureIam20180101StructureJson() (*asset, error) {
+	bytes, err := byteplusSdkMetadataStructureIam20180101StructureJsonBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/iam/2018-01-01/structure.json", size: 35562, mode: os.FileMode(420), modTime: time.Unix(1693379221, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+// Asset loads and returns the asset for the given name.
+// It returns an error if the asset could not be found or
+// could not be loaded.
+func Asset(name string) ([]byte, error) {
+	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	if f, ok := _bindata[cannonicalName]; ok {
+		a, err := f()
+		if err != nil {
+			return nil, fmt.Errorf("Asset %s can't read by error: %v", name, err)
+		}
+		return a.bytes, nil
+	}
+	return nil, fmt.Errorf("Asset %s not found", name)
+}
+
+// MustAsset is like Asset but panics when Asset would return an error.
+// It simplifies safe initialization of global variables.
+func MustAsset(name string) []byte {
+	a, err := Asset(name)
+	if err != nil {
+		panic("asset: Asset(" + name + "): " + err.Error())
+	}
+
+	return a
+}
+
+// AssetInfo loads and returns the asset info for the given name.
+// It returns an error if the asset could not be found or
+// could not be loaded.
+func AssetInfo(name string) (os.FileInfo, error) {
+	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	if f, ok := _bindata[cannonicalName]; ok {
+		a, err := f()
+		if err != nil {
+			return nil, fmt.Errorf("AssetInfo %s can't read by error: %v", name, err)
+		}
+		return a.info, nil
+	}
+	return nil, fmt.Errorf("AssetInfo %s not found", name)
+}
+
+// AssetNames returns the names of the assets.
+func AssetNames() []string {
+	names := make([]string, 0, len(_bindata))
+	for name := range _bindata {
+		names = append(names, name)
+	}
+	return names
+}
+
+// _bindata is a table, holding each asset generator, mapped to its name.
+var _bindata = map[string]func() (*asset, error){
+	"byteplus-sdk-metadata/structure/iam/2018-01-01/structure.json": byteplusSdkMetadataStructureIam20180101StructureJson,
+}
+
+// AssetDir returns the file names below a certain
+// directory embedded in the file by go-bindata.
+// For example if you run go-bindata on data/... and data contains the
+// following hierarchy:
+//
+//	data/
+//	  foo.txt
+//	  img/
+//	    a.png
+//	    b.png
+//
+// then AssetDir("data") would return []string{"foo.txt", "img"}
+// AssetDir("data/img") would return []string{"a.png", "b.png"}
+// AssetDir("foo.txt") and AssetDir("notexist") would return an error
+// AssetDir("") will return []string{"data"}.
+func AssetDir(name string) ([]string, error) {
+	node := _bintree
+	if len(name) != 0 {
+		cannonicalName := strings.Replace(name, "\\", "/", -1)
+		pathList := strings.Split(cannonicalName, "/")
+		for _, p := range pathList {
+			node = node.Children[p]
+			if node == nil {
+				return nil, fmt.Errorf("Asset %s not found", name)
+			}
+		}
+	}
+	if node.Func != nil {
+		return nil, fmt.Errorf("Asset %s not found", name)
+	}
+	rv := make([]string, 0, len(node.Children))
+	for childName := range node.Children {
+		rv = append(rv, childName)
+	}
+	return rv, nil
+}
+
+type bintree struct {
+	Func     func() (*asset, error)
+	Children map[string]*bintree
+}
+
+var _bintree = &bintree{nil, map[string]*bintree{
+	"byteplus-sdk-metadata": &bintree{nil, map[string]*bintree{
+		"structure": &bintree{nil, map[string]*bintree{
+			"iam": &bintree{nil, map[string]*bintree{
+				"2018-01-01": &bintree{nil, map[string]*bintree{
+					"structure.json": &bintree{byteplusSdkMetadataStructureIam20180101StructureJson, map[string]*bintree{}},
+				}},
+			}},
+		}},
+	}},
+}}
+
+// RestoreAsset restores an asset under the given directory
+func RestoreAsset(dir, name string) error {
+	data, err := Asset(name)
+	if err != nil {
+		return err
+	}
+	info, err := AssetInfo(name)
+	if err != nil {
+		return err
+	}
+	err = os.MkdirAll(_filePath(dir, filepath.Dir(name)), os.FileMode(0755))
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(_filePath(dir, name), data, info.Mode())
+	if err != nil {
+		return err
+	}
+	err = os.Chtimes(_filePath(dir, name), info.ModTime(), info.ModTime())
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+// RestoreAssets restores an asset under the given directory recursively
+func RestoreAssets(dir, name string) error {
+	children, err := AssetDir(name)
+	// File
+	if err != nil {
+		return RestoreAsset(dir, name)
+	}
+	// Dir
+	for _, child := range children {
+		err = RestoreAssets(dir, filepath.Join(name, child))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func _filePath(dir, name string) string {
+	cannonicalName := strings.Replace(name, "\\", "/", -1)
+	return filepath.Join(append([]string{dir}, strings.Split(cannonicalName, "/")...)...)
+}
