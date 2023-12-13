@@ -67,7 +67,7 @@
    export BYTEPLUS_REGION=cn-bejing
    
    # 是否禁用SSL, 不设置的话默认为false
-   export BYTEPLUS_SESSION_TOKEN=false
+   export BYTEPLUS_DISABLE_SSL=false
    
    # 如果使用角色扮演，需要提供
    export BYTEPLUS_SESSION_TOKEN=sessionToken
