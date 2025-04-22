@@ -9,7 +9,7 @@ import (
 	"os"
 
 	"github.com/byteplus-sdk/byteplus-cli/util"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/byteplusutil"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/byteplusutil"
 )
 
 const ConfigFile = "config.json"

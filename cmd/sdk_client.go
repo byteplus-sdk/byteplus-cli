@@ -6,16 +6,16 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/byteplusutil"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/byteplusutil"
 
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/byteplusquery"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/client"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/client/metadata"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/credentials"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/request"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/session"
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/signer/byteplussign"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/byteplusquery"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/client"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/client/metadata"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/credentials"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/request"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/session"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/signer/byteplussign"
 )
 
 type SdkClient struct {

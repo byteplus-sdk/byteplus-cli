@@ -3,7 +3,7 @@ package cmd
 import (
 	"runtime"
 
-	"github.com/byteplus-sdk/byteplus-go-sdk/byteplus/request"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/request"
 )
 
 var clientVersionAndUserAgentHandler = request.NamedHandler{
