@@ -8,7 +8,7 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use: "byteplus-cli",
+	Use: "bp",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		cmd.Usage()
 		return nil
