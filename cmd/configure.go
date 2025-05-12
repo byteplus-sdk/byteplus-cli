@@ -9,7 +9,6 @@ import (
 	"os"
 
 	"github.com/byteplus-sdk/byteplus-cli/util"
-	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/byteplusutil"
 )
 
 const ConfigFile = "config.json"
@@ -144,8 +143,6 @@ func setConfigProfile(profile *Profile) error {
 	}
 	if profile.Endpoint != "" {
 		currentProfile.Endpoint = profile.Endpoint
-	} else {
-		currentProfile.Endpoint = byteplusutil.NewEndpoint().GetEndpoint()
 	}
 	if profile.SessionToken != "" {
 		currentProfile.SessionToken = profile.SessionToken

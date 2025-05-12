@@ -1,4 +1,4 @@
-#!/bin/bash
+c#!/bin/bash
 OS=$1
 
 set -ea

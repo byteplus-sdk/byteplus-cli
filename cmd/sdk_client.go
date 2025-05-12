@@ -6,8 +6,6 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/byteplusutil"
-
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/byteplusquery"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/client"
@@ -88,11 +86,9 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		WithCredentials(credentials.NewStaticCredentials(ak, sk, sessionToken)).
 		WithDisableSSL(disableSSl)
 
-	if endpoint == "" {
-		endpoint = byteplusutil.NewEndpoint().GetEndpoint()
+	if endpoint != "" {
+		config.WithEndpoint(endpoint)
 	}
-
-	config.WithEndpoint(endpoint)
 
 	sess, _ := session.NewSession(config)
 
