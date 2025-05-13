@@ -1,266 +1,226 @@
 ## Byteplus Command Line Tools
-###  概述
-1. Byteplus-命令行工具
-2. Go版本最低1.5+ 推荐是用1.12+
 
-### 安装 bp 
+### Overview
 
-#### 通过release获取客户端
-1. https://github.com/byteplus-sdk/bp/releases 获取最新版本
-2. 下载对应操作系统的版本 解压使用
+1. Byteplus CLI Tool
+2. Minimum Go version required: 1.5+, recommended: 1.12+
 
-#### 自行编译获取客户端
+### Installing `bp`
 
-1. 使用build.sh编译客户端
-    ```shell
-    # 如果是mac 
-    sh build.sh darwain
-    # 如果是windows
-    sh build.sh windows
-    # 如果是linux
-    sh build.sh linux
-    ```
+#### Get the Client via Release
 
+1. Download the latest version from: [https://github.com/byteplus/byteplus-cli/releases](https://github.com/byteplus/byteplus-cli/releases)
+2. Select the version for your OS, extract and use directly
 
-​    
+#### Build the Client Yourself
 
-### 配置 bp
-
-将 bp 配置进环境变量
-
-1. 检查一下 $PATH 系统变量是否存在 /usr/local/bin，若没有则请您根据实际情况为 bp 设置可用的环境变量
-
-2. 执行下面的命令，将 bp 拷贝至 /usr/local/bin 目录下即可使用
-
-    ```shell
-    sudo cp bp /usr/local/bin
-    ```
-
-
-
-#### 配置凭证
-
-调用服务需要用到 AK，SK，region，可以通过以下两种方式进行配置
-1. 通过 bp configure set 设置，示例
-
-   ```shell
-   bp configure set --profile test --region cn-beijing --access-key ak --secret-key sk --endpoint endpoint
-   ```
-   支持参数及相关说明
-
-   ```shell
-   profile: 配置名称，如果 profile 已存在，则该命令会修改已有配置；否则就会新建配置，并将当前使用的profile指定为新配置
-   access-key: 您的 AK
-   secret-key: 您的 SK
-   region: 地域，如 cn-beijing
-   session-token: 如果使用角色扮演，需要提供
-   disable-ssl: 是否禁用 ssl，默认为 false
-   ```
-
-2. 若配置文件中无配置，则会尝试从 export 的环境变量中读取配置
-   ```shell
-   export BYTEPLUS_ACCESS_KEY=AK
-   export BYTEPLUS_SECRET_KEY=SK
-   export BYTEPLUS_REGION=cn-bejing
-   
-   # 是否禁用SSL, 不设置的话默认为false
-   export BYTEPLUS_DISABLE_SSL=false
-   
-   # 如果使用角色扮演，需要提供
-   export BYTEPLUS_SESSION_TOKEN=sessionToken
-   ```
-
-
-
-#### configure命令的其他操作
-
-1. bp使用configure配置profile之后，会优先使用profile中的鉴权信息进行接口签名访问
-2. 新增或者修改profile后，当前configure中的默认使用profile会被切换到新增或者修改的profile上
-3. 如果存在多个profile，请在调用接口前，使用bp configure profile --profile [配置名] 进行切换，以保证正确的使用
-
-###### 获取指定配置(profile)信息
+1. Use `build.sh` to compile the client
 
 ```shell
-bp configure get --profile [配置名]
+# For macOS\sh build.sh darwin
+# For Windows
+sh build.sh windows
+# For Linux
+sh build.sh linux
 ```
 
-其中 profile 为可选字段，若不指定 profile 字段则会展示当前配置；若指定了 profile 则 bp 会尝试获取指定配置并展示
+### Configuring `bp`
 
-若配置不存在，则返回的配置字段全为默认值
+Add `bp` to your system `PATH`
 
+1. Check if `$PATH` includes `/usr/local/bin`. If not, add it accordingly.
+2. Run the following command to copy `bp` to `/usr/local/bin`:
 
+```shell
+sudo cp bp /usr/local/bin
+```
 
-###### 显示当前所有配置(profile)信息
+#### Configure Credentials
+
+To call services, you need `AK`, `SK`, and `region`. You can configure them in two ways:
+
+1. Use `bp configure set`:
+
+```shell
+bp configure set --profile test --region cn-beijing --access-key ak --secret-key sk --endpoint endpoint
+```
+
+Supported Parameters:
+
+```shell
+profile: Configuration name. If it exists, it will be updated; otherwise, a new one will be created.
+access-key: Your AK
+secret-key: Your SK
+region: Region, e.g., cn-beijing
+session-token: Required for role-based access
+disable-ssl: Whether to disable SSL, default is false
+```
+
+2. Use Environment Variables:
+
+```shell
+export BYTEPLUS_ACCESS_KEY=AK
+export BYTEPLUS_SECRET_KEY=SK
+export BYTEPLUS_REGION=cn-beijing
+export BYTEPLUS_DISABLE_SSL=false
+export BYTEPLUS_SESSION_TOKEN=sessionToken
+```
+
+#### Other `configure` Commands
+
+1. `bp` will prioritize using the credentials in the active profile.
+2. After adding or modifying a profile, it becomes the active profile.
+3. If multiple profiles exist, switch using:
+
+```shell
+bp configure profile --profile [profile_name]
+```
+
+##### View a Specific Profile
+
+```shell
+bp configure get --profile [profile_name]
+```
+
+If omitted, current profile is shown. If profile doesn't exist, default values are returned.
+
+##### List All Profiles
 
 ```shell
 bp configure list
 ```
 
-###### 切换当前使用的配置(profile)信息 请确保版本大于或者等于>=1.0.16
+##### Switch Active Profile (>= v1.0.16)
 
 ```shell
-bp configure profile --profile [配置名]
+bp configure profile --profile [profile_name]
 ```
 
-其中 profile 为必选字段，指定了 profile 则 bp 会尝试获切换当前的配值
+If profile doesn't exist, the switch fails with an error message.
 
-若配置不存在，当前的配置不会发生切换，并且会给出错误的提示
-
-
-###### 新建/修改配置(profile)
+##### Add/Modify Profile
 
 ```shell
-bp configure set --profile [配置名] --region [地区] --access-key [用户的AK] --secret-key [用户的SK] --endpoint [地区对应的endpoint]
+bp configure set --profile [name] --region [region] --access-key [AK] --secret-key [SK] --endpoint [endpoint]
 ```
 
-新建或者修改配置后，当前的使用配置会切换到修改的配置上
+Additional Fields:
 
-新建配置时必须指定 profile 字段和 region 字段，修改已有配置必须指定 profile 字段
+* access-key
+* secret-key
+* region
+* session-token
+* disable-ssl
 
-其余可指定的字段：
-
-- access-key
-- secret-key
-- region
-- session-token
-- disable-ssl
-
-各个字段的作用您可以参考上节中 "支持参数及相关说明" 部分
-
-
-
-###### 删除配置(profile)
+##### Delete Profile
 
 ```shell
-bp configure delete --profile [配置名]
+bp configure delete --profile [profile_name]
 ```
 
-删除配置时必须指定 profile 字段以指示需要删除的配置名
+If the deleted profile is the current one, `bp` will randomly pick another available profile.
 
-若待删除的是当前正在使用的配置，则删除成功后 bp 会尝试从剩余的配置中随机挑选一个作为当前配置
+#### Configure Auto-Completion
 
-
-
-#### 配置自动补全
-
-使用 bp completion --help 可以查看各种终端下配置自动补全的方式，用户可以根据提示信息自己选择是否配置自动补全功能
-
-<br/>
+Run `bp completion --help` to check how to enable shell auto-completion.
 
 ##### Bash
 
-bp 的 Bash 补全脚本可以通过 bp completion bash 进行查看，在 shell 中导入该自动补全脚本，即可开启自动补全功能
+1. View bash script: `bp completion bash`
+2. Install bash-completion:
 
-###### 1. 安装 bash-completion
+```shell
+yum install bash-completion
+# or
+apt-get install bash-completion
+```
 
-bp 补全脚本依赖于工具 bash-completiom，所以你必须先安装并启用它（可以用命令 type _init_completion 检查 bash-completion 是否已安装）
+3. Enable it:
 
-1. 安装：yum install bash-completion 或 apt-get install bash-completion
+```shell
+source /usr/share/bash-completion/bash_completion
+```
 
-2. 启用 bash-completion：source /usr/share/bash-completion/bash_completion
+Add it to `~/.bashrc` for persistence.
 
-    建议将 source /usr/share/bash-completion/bash_completion 添加至 ~/.bashrc 中
+4. Configure auto-completion:
 
-3. 检查 bash-completion 是否安装成功：执行 type _init_completion 验证 bash-completion 的安装状态
+```shell
+echo 'source <(bp completion bash)' >> ~/.bashrc
+bp completion bash > /etc/bash_completion.d/bp
+```
 
-
-
-###### 2. 配置自动补全
-
-按以下步骤配置即可在 Bash 下开启自动补全功能：
-
-1. echo 'source <(bp completion bash)' >> ~/.bashrc
-2. bp completion bash > /etc/bash_completion.d/bp
-
-之后重新加载 Shell （或者 source ~/.bashrc） 后即可生效
-
-
-
-若出现 _get_comp_words_by_ref: command not found 的错误，请再次检查 bash-completion 是否安装配置成功
-
-<br/>
+Then reload shell or run `source ~/.bashrc`
 
 ##### Zsh
 
-bp 的 Zsh 补全脚本可以通过 bp completion zsh 进行查看，在 shell 中导入该自动补全脚本，即可开启自动补全功能
-
-按以下步骤配置即可在 Zsh 下开启自动补全功能：
-
-1. Zsh 中启用 compinit：
-    echo "autoload -U compinit; compinit" >> ~/.zshrc
-2. 配置自动补全
-    bp completion zsh > "${fpath[1]}/_bp"
-
-之后重新加载 Shell （或者 source ~/.zshrc） 后即可生效
-
-
-
-
-
-#### 配置颜色 
-
-使用 bp enable-color 可以开启彩色显示功能
-
-使用 bp disable-color 可以关闭彩色显示功能
-
-
-
-
-### 使用 bp
-#### 查询支持的服务列表及服务下支持的接口列表
-
-1. 查询支持的服务列表
-   ```shell
-   bp [-h|--help]
-   ```
-2. 查询服务下支持的接口列表
-   ```shell
-   bp ecs [-h|--help]
-   ```
-
-
-
-#### 调用API
-
-使用 bp 调用 API 时，基本命令结构如下：
+1. Enable `compinit`:
 
 ```shell
-bp <service name> <action> [--parameter1 value1 --parameter2 value2 ...]
+echo "autoload -U compinit; compinit" >> ~/.zshrc
 ```
 
-您可以使用 bp &lt;service name&gt; &lt;action&gt; --help 查看想要调用的API的参数列表、返回结果等信息，例如：bp ecs DescribeInstances --help
+2. Configure:
 
+```shell
+bp completion zsh > "${fpath[1]}/_bp"
+```
 
+Then reload shell or run `source ~/.zshrc`
 
-<br/>
+#### Configure Color Output
 
-以下提供一些代码示例：
+Enable color:
 
-- 基本使用
+```shell
+bp enable-color
+```
 
-    ```shell
-    bp ecs DescribeInstances
-    ```
+Disable color:
 
-    ```shell
-    bp rds_mysql ListDBInstanceIPLists --InstanceId "xxxxxx"
-    ```
+```shell
+bp disable-color
+```
 
-- 支持传入 JSON
+### Using `bp`
 
-    ```shell
-    bp rds_mysql ModifyDBInstanceIPList --InstanceId "xxxxxx" --GroupName "xxxxxx" --IPList '["10.20.30.40", "50.60.70.80"]'
-    ```
+#### List Services and Actions
 
-- 对于 ContentType 为 application/json 的请求，bp 还支持直接将 body 作为 JSON 数据传入
+1. View available services:
 
-    ```shell
-    bp rds_mysql ModifyDBInstanceIPList --body '{"InstanceId":"xxxxxx", "GroupName": "xxxxxx", "IPList": ["10.20.30.40", "50.60.70.80"]}'
-    ```
+```shell
+bp [-h|--help]
+```
 
-    
+2. View service's supported actions:
 
+```shell
+bp ecs [-h|--help]
+```
 
+#### Calling APIs
 
+Basic structure:
 
+```shell
+bp <service> <action> [--param1 val1 --param2 val2 ...]
+```
 
+Example:
+
+```shell
+bp ecs DescribeInstances
+bp rds_mysql ListDBInstanceIPLists --InstanceId "xxxxxx"
+```
+
+Support JSON input:
+
+```shell
+bp rds_mysql ModifyDBInstanceIPList --InstanceId "xxxxxx" --GroupName "xxxxxx" --IPList '["10.20.30.40", "50.60.70.80"]'
+```
+
+Support `--body` for application/json:
+
+```shell
+bp rds_mysql ModifyDBInstanceIPList --body '{"InstanceId":"xxxxxx", "GroupName": "xxxxxx", "IPList": ["10.20.30.40", "50.60.70.80"]}'
+```
