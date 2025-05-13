@@ -17,7 +17,8 @@
 1. Use `build.sh` to compile the client
 
 ```shell
-# For macOS\sh build.sh darwin
+# For macOS\
+sh build.sh darwin
 # For Windows
 sh build.sh windows
 # For Linux
