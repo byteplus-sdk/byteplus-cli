@@ -17,7 +17,7 @@
 1. Use `build.sh` to compile the client
 
 ```shell
-# For macOS\
+# For macOS
 sh build.sh darwin
 # For Windows
 sh build.sh windows
@@ -112,6 +112,7 @@ Additional Fields:
 * region
 * session-token
 * disable-ssl
+* endpoint
 
 ##### Delete Profile
 
