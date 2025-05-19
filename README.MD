@@ -9,7 +9,7 @@
 
 #### Get the Client via Release
 
-1. Download the latest version from: [https://github.com/byteplus-sdk/byteplus-cli/releases](https://github.com/byteplus/byteplus-cli/releases)
+1. Download the latest version from: [https://github.com/byteplus-sdk/byteplus-cli/releases](https://github.com/byteplus-sdk/byteplus-cli/releases)
 2. Select the version for your OS, extract and use directly
 
 #### Build the Client Yourself
