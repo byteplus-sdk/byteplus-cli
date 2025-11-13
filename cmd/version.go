@@ -28,4 +28,4 @@ var clientVersionAndUserAgentHandler = request.NamedHandler{
 }
 
 const clientName = "byteplus-cli"
-const clientVersion = "1.0.3"
+const clientVersion = "1.0.4"
