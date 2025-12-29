@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/endpoints"
 	"os"
 	"strconv"
 	"strings"
@@ -47,8 +48,8 @@ type SdkClientInfo struct {
 
 func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	var (
-		ak, sk, sessionToken, region, endpoint string
-		disableSSl                             bool
+		ak, sk, sessionToken, region, endpoint, endpointResolver string
+		disableSSl, useDualStack                                 bool
 	)
 
 	// first try to get ak/sk/region from config file
@@ -59,8 +60,12 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 			sk = currentProfile.SecretKey
 			region = currentProfile.Region
 			endpoint = currentProfile.Endpoint
+			endpointResolver = currentProfile.EndpointResolver
 			sessionToken = currentProfile.SessionToken
 			disableSSl = *currentProfile.DisableSSL
+			if currentProfile.UseDualStack != nil {
+				useDualStack = *currentProfile.UseDualStack
+			}
 
 			if ak == "" {
 				return nil, fmt.Errorf("profile AccessKey not set")
@@ -80,10 +85,15 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		sk = os.Getenv("BYTEPLUS_SECRET_KEY")
 		region = os.Getenv("BYTEPLUS_REGION")
 		endpoint = os.Getenv("BYTEPLUS_ENDPOINT")
+		endpointResolver = os.Getenv("BYTEPLUS_ENDPOINT_RESOLVER")
 		sessionToken = os.Getenv("BYTEPLUS_SESSION_TOKEN")
 		ssl := os.Getenv("BYTEPLUS_DISABLE_SSL")
 		if ssl == "true" || ssl == "false" {
 			disableSSl, _ = strconv.ParseBool(ssl)
+		}
+		dualStack := os.Getenv("BYTEPLUS_USE_DUALSTACK")
+		if dualStack == "true" || dualStack == "false" {
+			useDualStack, _ = strconv.ParseBool(dualStack)
 		}
 
 		if ak == "" {
@@ -102,8 +112,18 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		WithCredentials(credentials.NewStaticCredentials(ak, sk, sessionToken)).
 		WithDisableSSL(disableSSl)
 
-	if endpoint != "" {
-		config.WithEndpoint(endpoint)
+	resolverValue := strings.ToLower(strings.TrimSpace(endpointResolver))
+	switch resolverValue {
+	case "standard":
+		config.WithEndpointResolver(endpoints.NewStandardEndpointResolver())
+	default:
+		if endpoint != "" {
+			config.WithEndpoint(endpoint)
+		}
+	}
+
+	if useDualStack {
+		config.WithUseDualStack(true)
 	}
 
 	sess, _ := session.NewSession(config)
