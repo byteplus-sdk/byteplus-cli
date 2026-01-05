@@ -36,14 +36,16 @@ type Configure struct {
 }
 
 type Profile struct {
-	Name         string `json:"name"`
-	Mode         string `json:"mode"`
-	AccessKey    string `json:"access-key"`
-	SecretKey    string `json:"secret-key"`
-	Region       string `json:"region"`
-	Endpoint     string `json:"endpoint"`
-	SessionToken string `json:"session-token"`
-	DisableSSL   *bool  `json:"disable-ssl"`
+	Name             string `json:"name"`
+	Mode             string `json:"mode"`
+	AccessKey        string `json:"access-key"`
+	SecretKey        string `json:"secret-key"`
+	Region           string `json:"region"`
+	Endpoint         string `json:"endpoint"`
+	EndpointResolver string `json:"endpoint-resolver,omitempty"`
+	UseDualStack     *bool  `json:"use-dual-stack,omitempty"`
+	SessionToken     string `json:"session-token"`
+	DisableSSL       *bool  `json:"disable-ssl"`
 }
 
 // LoadConfig from CONFIG_FILE_DIR(default ~/.byteplus)
@@ -141,11 +143,13 @@ func setConfigProfile(profile *Profile) error {
 	// otherwise create a new profileFlags
 	if currentProfile, exist = cfg.Profiles[profile.Name]; !exist {
 		currentProfile = &Profile{
-			Name:       profile.Name,
-			Mode:       "AK",
-			DisableSSL: new(bool),
+			Name:         profile.Name,
+			Mode:         "AK",
+			DisableSSL:   new(bool),
+			UseDualStack: new(bool),
 		}
 		*currentProfile.DisableSSL = false
+		*currentProfile.UseDualStack = false
 	}
 
 	if profile.AccessKey != "" {
@@ -160,11 +164,20 @@ func setConfigProfile(profile *Profile) error {
 	if profile.Endpoint != "" {
 		currentProfile.Endpoint = profile.Endpoint
 	}
+	if profile.EndpointResolver != "" {
+		currentProfile.EndpointResolver = profile.EndpointResolver
+	}
 	if profile.SessionToken != "" {
 		currentProfile.SessionToken = profile.SessionToken
 	}
 	if profile.DisableSSL != nil {
 		*currentProfile.DisableSSL = *profile.DisableSSL
+	}
+	if profile.UseDualStack != nil {
+		if currentProfile.UseDualStack == nil {
+			currentProfile.UseDualStack = new(bool)
+		}
+		*currentProfile.UseDualStack = *profile.UseDualStack
 	}
 
 	cfg.Profiles[currentProfile.Name] = currentProfile

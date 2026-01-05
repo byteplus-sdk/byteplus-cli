@@ -55,6 +55,9 @@ secret-key: Your SK
 region: Region, e.g., cn-beijing
 session-token: Required for role-based access
 disable-ssl: Whether to disable SSL, default is false
+endpoint: Optional; the default value is open.volcengineapi.com. Ignored when endpoint-resolver is standard.
+endpoint-resolver: Optional; set to standard (case-insensitive) to use the standard resolver. Otherwise, the CLI uses endpoint when provided.
+use-dual-stack: Optional; enable dual-stack endpoints when true. The default value is false.
 ```
 
 2. Use Environment Variables:
@@ -65,6 +68,9 @@ export BYTEPLUS_SECRET_KEY=SK
 export BYTEPLUS_REGION=cn-beijing
 export BYTEPLUS_DISABLE_SSL=false
 export BYTEPLUS_SESSION_TOKEN=sessionToken
+export BYTEPLUS_ENDPOINT=endpoint
+export BYTEPLUS_ENDPOINT_RESOLVER=standard
+export BYTEPLUS_USE_DUALSTACK=true
 ```
 
 #### Other `configure` Commands
@@ -113,6 +119,8 @@ Additional Fields:
 * session-token
 * disable-ssl
 * endpoint
+* endpoint-resolver
+* use-dual-stack
 
 ##### Delete Profile
 
@@ -198,6 +206,16 @@ bp [-h|--help]
 
 ```shell
 bp ecs [-h|--help]
+```
+
+#### Show CLI version
+
+```shell
+bp version
+```
+
+```shell
+bp -v
 ```
 
 #### Calling APIs
