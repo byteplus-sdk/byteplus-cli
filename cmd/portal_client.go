@@ -16,7 +16,7 @@ const (
 	defaultPortalRegion       = "ap-southeast-1"
 	defaultPortalTimeout      = 30 * time.Second
 	defaultPortalPageSize     = 50
-	portalBaseURLTemplate     = "https://cloudidentity-portal-boe.bytedance.net"
+	portalBaseURLTemplate     = "https://cloudidentity-portal.%s.bytepluses.com"
 	portalListAccountsPath    = "/assignment/accounts"
 	portalListAccountRoles    = "/assignment/roles"
 	portalGetRoleCredentials  = "/federation/credentials"
@@ -156,13 +156,12 @@ type GetRoleCredentialsResponse struct {
 
 // NewPortalClient 根据配置创建 PortalClient，包含默认值和可选覆盖项。
 func NewPortalClient(cfg *PortalClientConfig) *PortalClient {
-	/*region := defaultPortalRegion
+	region := defaultPortalRegion
 	if cfg != nil && strings.TrimSpace(cfg.Region) != "" {
 		region = strings.TrimSpace(cfg.Region)
-	}*/
+	}
 
-	//base := fmt.Sprintf(portalBaseURLTemplate, region)
-	base := portalBaseURLTemplate
+	base := fmt.Sprintf(portalBaseURLTemplate, region)
 	if cfg != nil && strings.TrimSpace(cfg.BaseURL) != "" {
 		base = strings.TrimRight(cfg.BaseURL, "/")
 	}
@@ -372,7 +371,6 @@ func (c *PortalClient) doPortalGetOnce(ctx context.Context, token string, fullUR
 	}
 	req.Header.Set("Accept", portalDefaultAcceptHeader)
 	req.Header.Set(portalAccessTokenHeader, token)
-	req.Header.Set("x-tt-env", "boe_ci_cli")
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {

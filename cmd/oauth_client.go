@@ -27,7 +27,7 @@ const (
 	defaultDeviceAuthPath = "/device_authorization"
 	defaultRequestTimeout = 10 * time.Second
 	deviceCodeGrantType   = "urn:ietf:params:oauth:grant-type:device_code"
-	oAuthBaseURLTemplate  = "https://cloudidentity-oauth.bytedance.net"
+	oAuthBaseURLTemplate  = "https://cloudidentity-oauth.%s.bytepluses.com"
 )
 
 // OAuthClient 缓存拼好的 URL 和 HTTP 客户端，避免每次调用重新计算。
@@ -142,14 +142,12 @@ func (e *OAuthAPIError) Error() string {
 
 // NewOAuthClient 根据配置创建 OAuthClient，包含默认值和可选覆盖项。
 func NewOAuthClient(cfg *OAuthClientConfig) *OAuthClient {
-	/**
 	region := defaultOAuthRegion
 	if cfg != nil && strings.TrimSpace(cfg.Region) != "" {
 		region = strings.TrimSpace(cfg.Region)
-	}**/
+	}
 
-	// base := fmt.Sprintf(oAuthBaseURLTemplate, region)
-	base := oAuthBaseURLTemplate
+	base := fmt.Sprintf(oAuthBaseURLTemplate, region)
 	client := &http.Client{Timeout: defaultRequestTimeout}
 	if cfg != nil && cfg.HTTPClient != nil {
 		client = cfg.HTTPClient
@@ -277,7 +275,6 @@ func doOAuthPost(ctx context.Context, client *http.Client, url string, payload i
 			return fmt.Errorf("failed to build request: %w", err)
 		}
 		httpReq.Header.Set("Content-Type", "application/json")
-		httpReq.Header.Set("x-tt-env", "boe_cli_cli")
 
 		resp, err := client.Do(httpReq)
 		if err != nil {
