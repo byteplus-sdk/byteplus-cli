@@ -271,8 +271,8 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 
 	cmd.Flags().StringVar(&ssoSessionFlags.Name, "name", "", "SSO session name")
 	cmd.Flags().StringVar(&ssoSessionFlags.StartURL, "start-url", "", "SSO start URL")
-	cmd.Flags().StringVar(&ssoSessionFlags.Region, "region", defaultSsoRegion, "SSO region")
-	cmd.Flags().StringSliceVar(&ssoSessionFlags.RegistrationScopes, "registration-scopes", defaultRegistrationScopes, "comma-separated SSO registration scopes (cloudidentity:account:access,offline_access)")
+	cmd.Flags().StringVar(&ssoSessionFlags.Region, "region", "", "SSO region")
+	cmd.Flags().StringSliceVar(&ssoSessionFlags.RegistrationScopes, "registration-scopes", nil, "comma-separated SSO registration scopes (cloudidentity:account:access,offline_access)")
 	cmd.Flags().BoolP("help", "h", false, "")
 
 	return cmd
