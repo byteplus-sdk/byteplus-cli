@@ -23,16 +23,26 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
+	"sync"
 
 	"github.com/byteplus-sdk/byteplus-cli/util"
 )
 
-const ConfigFile = "config.json"
+var configFileMu sync.Mutex
+
+const (
+	ModeSSO = "sso"
+	ModeAK  = "ak"
+
+	ConfigFile = "config.json"
+)
 
 type Configure struct {
-	Current     string              `json:"current"`
-	Profiles    map[string]*Profile `json:"profiles"`
-	EnableColor bool                `json:"enableColor"`
+	Current     string                 `json:"current"`
+	Profiles    map[string]*Profile    `json:"profiles"`
+	EnableColor bool                   `json:"enableColor"`
+	SsoSession  map[string]*SsoSession `json:"sso-session"`
 }
 
 type Profile struct {
@@ -46,33 +56,42 @@ type Profile struct {
 	UseDualStack     *bool  `json:"use-dual-stack,omitempty"`
 	SessionToken     string `json:"session-token"`
 	DisableSSL       *bool  `json:"disable-ssl"`
+	SsoSessionName   string `json:"sso-session-name,omitempty"`
+	AccountId        string `json:"account-id,omitempty"`
+	RoleName         string `json:"role-name,omitempty"`
+	StsExpiration    int64  `json:"sts-expiration,omitempty"`
+}
+
+type SsoSession struct {
+	Name               string   `json:"name"`
+	StartURL           string   `json:"start-url"`
+	Region             string   `json:"region"`
+	RegistrationScopes []string `json:"registration-scopes,omitempty"`
 }
 
 // LoadConfig from CONFIG_FILE_DIR(default ~/.byteplus)
 func LoadConfig() *Configure {
+	configFileMu.Lock()
+	defer configFileMu.Unlock()
+
 	configFileDir, err := util.GetConfigFileDir()
 	if err != nil {
 		return nil
 	}
 
-	if _, err = os.Stat(configFileDir); err != nil {
-		if os.IsNotExist(err) {
-			os.MkdirAll(configFileDir, 0755)
-		}
+	if err := os.MkdirAll(configFileDir, 0700); err != nil {
+		return nil
 	}
+	_ = os.Chmod(configFileDir, 0700)
 
-	if _, err = os.Stat(configFileDir + ConfigFile); err != nil {
-		if os.IsNotExist(err) {
-			// todo handle err
-		}
-	}
-
-	file, err := os.OpenFile(configFileDir+ConfigFile, os.O_CREATE|os.O_RDWR, 0666)
+	configFilePath := filepath.Join(configFileDir, ConfigFile)
+	file, err := os.OpenFile(configFilePath, os.O_CREATE|os.O_RDWR, 0600)
 	if err != nil {
 		fmt.Println(err)
 		return nil
 	}
 	defer file.Close()
+	_ = file.Chmod(0600)
 
 	fileContent, err := ioutil.ReadAll(file)
 	if err != nil {
@@ -90,19 +109,47 @@ func LoadConfig() *Configure {
 
 // WriteConfigToFile store config
 func WriteConfigToFile(config *Configure) error {
-	configFileDir, err := util.GetConfigFileDir()
-	if err != nil {
-		return nil
-	}
+	configFileMu.Lock()
+	defer configFileMu.Unlock()
 
-	file, err := os.OpenFile(configFileDir+ConfigFile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0666)
+	configFileDir, err := util.GetConfigFileDir()
 	if err != nil {
 		return err
 	}
-	defer file.Close()
 
-	enc := json.NewEncoder(file)
-	enc.Encode(config)
+	if err := os.MkdirAll(configFileDir, 0700); err != nil {
+		return err
+	}
+	_ = os.Chmod(configFileDir, 0700)
+
+	targetPath := filepath.Join(configFileDir, ConfigFile)
+
+	dir := filepath.Dir(targetPath)
+	tempFile, err := os.CreateTemp(dir, ".tmp-config-*")
+	if err != nil {
+		return err
+	}
+	tempName := tempFile.Name()
+	defer func() {
+		_ = tempFile.Close()
+		_ = os.Remove(tempName)
+	}()
+	_ = tempFile.Chmod(0600)
+
+	if err := json.NewEncoder(tempFile).Encode(config); err != nil {
+		return err
+	}
+	if err := tempFile.Close(); err != nil {
+		return err
+	}
+
+	if err := os.Rename(tempName, targetPath); err != nil {
+		_ = os.Remove(targetPath)
+		if err2 := os.Rename(tempName, targetPath); err2 != nil {
+			return err2
+		}
+	}
+	_ = os.Chmod(targetPath, 0600)
 	return nil
 }
 
@@ -178,6 +225,9 @@ func setConfigProfile(profile *Profile) error {
 			currentProfile.UseDualStack = new(bool)
 		}
 		*currentProfile.UseDualStack = *profile.UseDualStack
+	}
+	if profile.SsoSessionName != "" {
+		currentProfile.SsoSessionName = profile.SsoSessionName
 	}
 
 	cfg.Profiles[currentProfile.Name] = currentProfile
@@ -297,4 +347,36 @@ func (p *Profile) ToMap() map[string]interface{} {
 func (p *Profile) String() string {
 	b, _ := json.MarshalIndent(p, "", "    ")
 	return string(b)
+}
+
+func setSsoSession(session *SsoSession) error {
+	var (
+		cfg *Configure
+	)
+	scopes, err := normalizeRegistrationScopes(session.RegistrationScopes)
+	if err != nil {
+		return err
+	}
+
+	if cfg = ctx.config; cfg == nil {
+		cfg = &Configure{
+			Profiles:   make(map[string]*Profile),
+			SsoSession: make(map[string]*SsoSession),
+		}
+	}
+
+	if cfg.SsoSession == nil {
+		cfg.SsoSession = make(map[string]*SsoSession)
+	}
+
+	newSession := &SsoSession{
+		Name:               session.Name,
+		StartURL:           session.StartURL,
+		Region:             session.Region,
+		RegistrationScopes: scopes,
+	}
+
+	cfg.SsoSession[session.Name] = newSession
+
+	return WriteConfigToFile(cfg)
 }

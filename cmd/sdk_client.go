@@ -56,25 +56,39 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	var currentProfile *Profile
 	if ctx.config != nil {
 		if currentProfile = ctx.config.Profiles[ctx.config.Current]; currentProfile != nil {
-			ak = currentProfile.AccessKey
-			sk = currentProfile.SecretKey
-			region = currentProfile.Region
-			endpoint = currentProfile.Endpoint
-			endpointResolver = currentProfile.EndpointResolver
-			sessionToken = currentProfile.SessionToken
-			disableSSl = *currentProfile.DisableSSL
-			if currentProfile.UseDualStack != nil {
-				useDualStack = *currentProfile.UseDualStack
-			}
+			mode := strings.ToLower(strings.TrimSpace(currentProfile.Mode))
+			switch mode {
+			case ModeSSO:
+				sso := &Sso{
+					Profile:        currentProfile,
+					SsoSessionName: currentProfile.SsoSessionName,
+					Region:         currentProfile.Region,
+				}
+				if err := sso.EnsureValidStsToken(ctx); err != nil {
+					return nil, err
+				}
+				fallthrough
+			case ModeAK, "":
+				ak = currentProfile.AccessKey
+				sk = currentProfile.SecretKey
+				region = currentProfile.Region
+				endpoint = currentProfile.Endpoint
+				endpointResolver = currentProfile.EndpointResolver
+				sessionToken = currentProfile.SessionToken
+				disableSSl = *currentProfile.DisableSSL
+				if currentProfile.UseDualStack != nil {
+					useDualStack = *currentProfile.UseDualStack
+				}
 
-			if ak == "" {
-				return nil, fmt.Errorf("profile AccessKey not set")
-			}
-			if sk == "" {
-				return nil, fmt.Errorf("profile SecretKey not set")
-			}
-			if region == "" {
-				return nil, fmt.Errorf("profile Region not set")
+				if ak == "" {
+					return nil, fmt.Errorf("profile AccessKey not set")
+				}
+				if sk == "" {
+					return nil, fmt.Errorf("profile SecretKey not set")
+				}
+				if region == "" {
+					return nil, fmt.Errorf("profile Region not set")
+				}
 			}
 		}
 	}
