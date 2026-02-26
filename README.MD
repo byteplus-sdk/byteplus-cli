@@ -156,7 +156,7 @@ Interactive flow notes:
 ###### Configure SSO Profile (configure sso)
 
 ```shell
-bp configure sso --profile [profile name] --sso-session [session name] --no-browser
+bp configure sso --profile [profile name] --sso-session [session name]
 ```
 
 This command configures an SSO profile, links an SSO session, runs the device authorization flow, and writes the profile to ~/.byteplus/config.json. Behaviors and parameters:
@@ -164,7 +164,7 @@ This command configures an SSO profile, links an SSO session, runs the device au
 ```shell
 profile: profile name; empty uses {sso-role-name}-{sso-account-id} as the default
 sso-session: SSO session name; if omitted, enter interactive selection/creation mode
-no-browser: do not automatically open the browser; default false
+no-browser: Adding the `--no-browser` parameter to the command line disables the browser from opening; omitting it will automatically open the browser by default.
 ```
 
 Notes:
@@ -186,7 +186,7 @@ This command logs in via SSO, obtains an access token, and caches it. Parameters
 ```shell
 profile: the SSO profile to use; must exist, be of sso type, and have sso-session configured
 sso-session: the SSO session to use; the session must exist and be valid
-no-browser: do not automatically open the browser; default false
+no-browser: Adding the `--no-browser` parameter to the command line disables the browser from opening; omitting it will automatically open the browser by default.
 ```
 
 Login behavior:
