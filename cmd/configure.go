@@ -36,9 +36,12 @@ var (
 	configFileDirFunc = util.GetConfigFileDir
 )
 
+var configFileDirFunc = util.GetConfigFileDir
+
 const (
-	ModeSSO = "sso"
-	ModeAK  = "ak"
+	ModeSSO          = "sso"
+	ModeAK           = "ak"
+	ModeConsoleLogin = "console-login"
 
 	ConfigFile = "config.json"
 )
@@ -65,6 +68,7 @@ type Profile struct {
 	AccountId        string `json:"account-id,omitempty"`
 	RoleName         string `json:"role-name,omitempty"`
 	StsExpiration    int64  `json:"sts-expiration,omitempty"`
+	LoginSession     string `json:"login-session,omitempty"`
 }
 
 type SsoSession struct {
@@ -110,6 +114,22 @@ func LoadConfig() *Configure {
 	}
 
 	return cfg
+}
+
+// runtimeConfig returns the in-memory config used by the current CLI process.
+func runtimeConfig() *Configure {
+	if ctx != nil && ctx.config != nil {
+		return ctx.config
+	}
+	return config
+}
+
+// setRuntimeConfig keeps the global config references in sync after updates.
+func setRuntimeConfig(cfg *Configure) {
+	if ctx != nil {
+		ctx.config = cfg
+	}
+	config = cfg
 }
 
 // WriteConfigToFile store config
@@ -189,6 +209,9 @@ func setConfigProfile(profile *Profile) error {
 		cfg = &Configure{
 			Profiles: make(map[string]*Profile),
 		}
+	}
+	if cfg.Profiles == nil {
+		cfg.Profiles = make(map[string]*Profile)
 	}
 
 	// check if the target profileFlags already exists

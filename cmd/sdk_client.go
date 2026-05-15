@@ -89,6 +89,27 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 				if region == "" {
 					return nil, fmt.Errorf("profile Region not set")
 				}
+			case ModeConsoleLogin:
+				creds, err := EnsureValidLoginToken(ctx.config, ctx.config.Current)
+				if err != nil {
+					return nil, err
+				}
+				ak = creds.AccessKeyID
+				sk = creds.SecretAccessKey
+				sessionToken = creds.SessionToken
+				region = currentProfile.Region
+				endpoint = currentProfile.Endpoint
+				endpointResolver = currentProfile.EndpointResolver
+				if currentProfile.DisableSSL != nil {
+					disableSSl = *currentProfile.DisableSSL
+				}
+				if currentProfile.UseDualStack != nil {
+					useDualStack = *currentProfile.UseDualStack
+				}
+
+				if region == "" {
+					return nil, fmt.Errorf("profile Region not set")
+				}
 			}
 		}
 	}
