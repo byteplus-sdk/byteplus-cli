@@ -211,6 +211,110 @@ Logout behavior:
 - If sso-session is not provided: error when no sessions are configured; logout the only session if one exists; otherwise enter interactive selection that includes "All SSO sessions"
 - Batch logout logs out each session and returns aggregated errors on failure
 
+#### SSO Login and Logout
+
+##### SSO Login (sso login)
+
+```shell
+bp sso login --profile [profile name]
+# or
+bp sso login --sso-session [session name]
+```
+
+This command logs in via SSO, obtains an access token, and caches it. Parameters:
+
+```shell
+profile: the SSO profile to use; must exist, be of sso type, and have sso-session configured
+sso-session: the SSO session to use; the session must exist and be valid
+no-browser: Adding the `--no-browser` parameter to the command line disables the browser from opening; omitting it will automatically open the browser by default.
+```
+
+Login behavior:
+- If neither profile nor sso-session is provided: error when no sessions are configured; use the only session if one exists; otherwise enter interactive selection with search
+- Only the device code flow is supported; use `--no-browser` to disable auto-opening the browser
+
+##### SSO Logout (sso logout)
+
+```shell
+bp sso logout --sso-session [session name]
+```
+
+This command logs out from SSO by revoking the cached token and clearing local credentials. Parameters:
+
+```shell
+sso-session: the SSO session name to log out
+```
+
+Logout behavior:
+- If sso-session is not provided: error when no sessions are configured; logout the only session if one exists; otherwise enter interactive selection that includes "All SSO sessions"
+- Batch logout logs out each session and returns aggregated errors on failure
+
+#### Console Login (login)
+
+```shell
+# Login with default profile; you will be prompted for region if not specified
+bp login
+
+# Recommended: specify profile and region; supports -p/-r shortcuts
+bp login -p dev -r ap-southeast-1
+
+# Cross-device login for headless/remote servers or containers
+bp login -p dev -r ap-southeast-1 --remote
+```
+
+This command performs OAuth 2.0 + PKCE login through the Byteplus console and caches temporary STS credentials locally. Subsequent CLI commands can reuse the profile's temporary credentials.
+
+Parameters:
+- `--profile, -p`: Profile name, default `default`
+- `--region, -r`: Region; if not specified, you will be prompted; press Enter to use `ap-southeast-1`
+- `--remote`: Cross-device login; follow the URL shown in the terminal to complete login in a browser, then paste the authorization code back into the terminal
+- `--endpoint-url`: Login service URL, default `https://signin.byteplus.com`; usually does not need to be changed
+
+Notes:
+- After successful login, the profile will be set to `console-login` mode and record a `login-session`
+- After logging in with a non-`default` profile, CLI commands will not automatically switch profiles; run `bp configure profile --profile dev` first
+- Use `--remote` when the local browser cannot redirect back to the CLI machine
+
+Full usage example:
+
+```shell
+# 1. Login and write to the dev profile
+bp login --profile dev --region ap-southeast-1
+
+# 2. If dev is not the current default profile, switch first
+bp configure profile --profile dev
+
+# 3. Run CLI commands using the console-login temporary credentials
+bp ecs DescribeInstances
+
+# 4. Clean up the local login state when done
+bp logout --profile dev
+```
+
+#### Console Logout (logout)
+
+```shell
+# Logout the default profile
+bp logout
+
+# Logout a specific profile
+bp logout -p dev
+
+# Logout all Console Login profiles in the current configuration
+bp logout --all
+```
+
+This command cleans up the local login state created by `bp login`. It only deletes local cached credentials and clears the `login-session` from the profile; it does not delete the profile or make any server-side requests.
+
+Parameters:
+- `--profile, -p`: Profile name, default `default`
+- `--all`: Clean up all `console-login` profiles; when enabled, `--profile` is ignored
+
+Notes:
+- `bp logout` without `--profile` only processes the `default` profile; it does not automatically log out based on `current`
+- Only `console-login` profiles can use this command; AK/SSO profiles are not applicable
+- After logout, run `bp login` again to re-authenticate
+
 #### Configure Auto-Completion
 
 Run `bp completion --help` to check how to enable shell auto-completion.
