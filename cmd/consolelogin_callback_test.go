@@ -83,27 +83,48 @@ func TestHandleCallbackErrorPriority(t *testing.T) {
 	}
 }
 
-func TestRenderCallbackPageEscapesScriptTermination(t *testing.T) {
-	page, err := renderCallbackPage("</script><script>alert(1)</script>")
+func TestRenderCallbackPageInjectsServerErrorMessageSafely(t *testing.T) {
+	maliciousError := "</script><script>alert(1)</script>"
+	page, err := renderCallbackPage(maliciousError)
 	if err != nil {
 		t.Fatalf("failed to render callback page: %v", err)
 	}
 
 	got := string(page)
-	wantSnippet := `var rawError = "<\/script><script>alert(1)<\/script>";`
-	if !strings.Contains(got, wantSnippet) {
-		t.Fatalf("rendered page does not contain expected escaped error snippet")
+	if strings.Contains(got, maliciousError) {
+		t.Fatalf("rendered page must not inject raw server-side oauth error text")
+	}
+	if !strings.Contains(got, `const callbackError = "<\/script><script>alert(1)<\/script>";`) {
+		t.Fatalf("rendered page should inject escaped server-side oauth error text")
+	}
+	if !strings.Contains(got, "textContent = title") {
+		t.Fatalf("rendered page should write oauth error text through textContent")
 	}
 }
 
-func TestRenderCallbackPageEmptyError(t *testing.T) {
+func TestRenderCallbackPageContainsDefaultSuccessState(t *testing.T) {
 	page, err := renderCallbackPage("")
 	if err != nil {
 		t.Fatalf("failed to render callback page: %v", err)
 	}
 
-	if !strings.Contains(string(page), `var rawError = "";`) {
-		t.Fatalf("rendered page does not contain empty error assignment")
+	if !strings.Contains(string(page), `Authentication successful`) {
+		t.Fatalf("rendered page should contain default success state")
+	}
+}
+
+func TestRenderCallbackPageUsesServerErrorForFailureState(t *testing.T) {
+	page, err := renderCallbackPage("invalid_request: denied")
+	if err != nil {
+		t.Fatalf("failed to render callback page: %v", err)
+	}
+
+	got := string(page)
+	if !strings.Contains(got, `const callbackError = "invalid_request: denied";`) {
+		t.Fatalf("rendered page should receive the normalized oauth error from the callback server")
+	}
+	if !strings.Contains(got, `document.documentElement.dataset.state = hasError ? "error" : "success";`) {
+		t.Fatalf("rendered page should switch success and failure states from the server error")
 	}
 }
 
