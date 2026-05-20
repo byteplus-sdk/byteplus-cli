@@ -29,7 +29,12 @@ import (
 	"github.com/byteplus-sdk/byteplus-cli/util"
 )
 
-var configFileMu sync.Mutex
+var (
+	configFileMu sync.Mutex
+	// configFileDirFunc 是配置目录获取函数的注入点。
+	// 生产环境固定使用 util.GetConfigFileDir；单测会替换为临时目录，避免读写真实 ~/.byteplus。
+	configFileDirFunc = util.GetConfigFileDir
+)
 
 const (
 	ModeSSO = "sso"
@@ -74,7 +79,7 @@ func LoadConfig() *Configure {
 	configFileMu.Lock()
 	defer configFileMu.Unlock()
 
-	configFileDir, err := util.GetConfigFileDir()
+	configFileDir, err := configFileDirFunc()
 	if err != nil {
 		return nil
 	}
@@ -112,7 +117,7 @@ func WriteConfigToFile(config *Configure) error {
 	configFileMu.Lock()
 	defer configFileMu.Unlock()
 
-	configFileDir, err := util.GetConfigFileDir()
+	configFileDir, err := configFileDirFunc()
 	if err != nil {
 		return err
 	}
