@@ -50,6 +50,7 @@
 // byteplus-sdk-metadata/structure/vmp/2021-03-03/structure.json
 // byteplus-sdk-metadata/structure/vod/2025-07-01/structure.json
 // byteplus-sdk-metadata/structure/vpc/2020-04-01/structure.json
+// byteplus-sdk-metadata/structure/vpc/2025-09-01/structure.json
 // byteplus-sdk-metadata/structure/vpn/2020-04-01/structure.json
 package structset
 
@@ -142,7 +143,7 @@ func byteplusSdkMetadataStructureAlb20200401StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/alb/2020-04-01/structure.json", size: 177140, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/alb/2020-04-01/structure.json", size: 177140, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -162,7 +163,7 @@ func byteplusSdkMetadataStructureApig20210303StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/apig/2021-03-03/structure.json", size: 112376, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/apig/2021-03-03/structure.json", size: 112376, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -182,7 +183,7 @@ func byteplusSdkMetadataStructureApig20221112StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/apig/2022-11-12/structure.json", size: 47370, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/apig/2022-11-12/structure.json", size: 47370, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -202,7 +203,7 @@ func byteplusSdkMetadataStructureArk20240101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ark/2024-01-01/structure.json", size: 43879, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ark/2024-01-01/structure.json", size: 43879, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -222,7 +223,7 @@ func byteplusSdkMetadataStructureAuto_scaling20200101StructureJson() (*asset, er
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/auto_scaling/2020-01-01/structure.json", size: 97440, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/auto_scaling/2020-01-01/structure.json", size: 97440, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -242,7 +243,7 @@ func byteplusSdkMetadataStructureBilling20220101StructureJson() (*asset, error) 
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/billing/2022-01-01/structure.json", size: 94056, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/billing/2022-01-01/structure.json", size: 94056, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -262,7 +263,7 @@ func byteplusSdkMetadataStructureCen20200401StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cen/2020-04-01/structure.json", size: 55710, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cen/2020-04-01/structure.json", size: 55710, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -282,7 +283,7 @@ func byteplusSdkMetadataStructureClb20200401StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/clb/2020-04-01/structure.json", size: 187440, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/clb/2020-04-01/structure.json", size: 187440, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -302,7 +303,7 @@ func byteplusSdkMetadataStructureCloudmonitor20180101StructureJson() (*asset, er
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cloudmonitor/2018-01-01/structure.json", size: 182019, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cloudmonitor/2018-01-01/structure.json", size: 182019, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -322,7 +323,7 @@ func byteplusSdkMetadataStructureCp20230501StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cp/2023-05-01/structure.json", size: 66620, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cp/2023-05-01/structure.json", size: 66620, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -342,7 +343,7 @@ func byteplusSdkMetadataStructureCr20220512StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cr/2022-05-12/structure.json", size: 35866, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/cr/2022-05-12/structure.json", size: 35866, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -362,7 +363,7 @@ func byteplusSdkMetadataStructureDirectconnect20200401StructureJson() (*asset, e
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/directconnect/2020-04-01/structure.json", size: 78142, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/directconnect/2020-04-01/structure.json", size: 78142, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -382,7 +383,7 @@ func byteplusSdkMetadataStructureDms20180101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/dms/2018-01-01/structure.json", size: 24136, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/dms/2018-01-01/structure.json", size: 24136, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -402,7 +403,7 @@ func byteplusSdkMetadataStructureEco_partner20250529StructureJson() (*asset, err
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/eco_partner/2025-05-29/structure.json", size: 5177, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/eco_partner/2025-05-29/structure.json", size: 5177, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -422,7 +423,7 @@ func byteplusSdkMetadataStructureEcs20200401StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ecs/2020-04-01/structure.json", size: 281955, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ecs/2020-04-01/structure.json", size: 281955, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -442,7 +443,7 @@ func byteplusSdkMetadataStructureEcs20251101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ecs/2025-11-01/structure.json", size: 30042, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ecs/2025-11-01/structure.json", size: 30042, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -462,7 +463,7 @@ func byteplusSdkMetadataStructureEscloud20230101StructureJson() (*asset, error) 
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/escloud/2023-01-01/structure.json", size: 47536, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/escloud/2023-01-01/structure.json", size: 47536, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -482,7 +483,7 @@ func byteplusSdkMetadataStructureFilenas20220101StructureJson() (*asset, error) 
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/filenas/2022-01-01/structure.json", size: 34551, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/filenas/2022-01-01/structure.json", size: 34551, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -502,7 +503,7 @@ func byteplusSdkMetadataStructureHbase20180101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/hbase/2018-01-01/structure.json", size: 29414, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/hbase/2018-01-01/structure.json", size: 29414, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -522,7 +523,7 @@ func byteplusSdkMetadataStructureIam20180101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/iam/2018-01-01/structure.json", size: 49686, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/iam/2018-01-01/structure.json", size: 49686, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -542,7 +543,7 @@ func byteplusSdkMetadataStructureIam20210801StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/iam/2021-08-01/structure.json", size: 11101, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/iam/2021-08-01/structure.json", size: 11101, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -562,7 +563,7 @@ func byteplusSdkMetadataStructureId20251030StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/id/2025-10-30/structure.json", size: 284944, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/id/2025-10-30/structure.json", size: 284944, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -582,7 +583,7 @@ func byteplusSdkMetadataStructureKafka20220501StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/kafka/2022-05-01/structure.json", size: 70616, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/kafka/2022-05-01/structure.json", size: 70616, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -602,7 +603,7 @@ func byteplusSdkMetadataStructureKickart20260227StructureJson() (*asset, error) 
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/kickart/2026-02-27/structure.json", size: 109650, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/kickart/2026-02-27/structure.json", size: 109650, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -622,7 +623,7 @@ func byteplusSdkMetadataStructureKms20210218StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/kms/2021-02-18/structure.json", size: 54263, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/kms/2021-02-18/structure.json", size: 54263, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -642,7 +643,7 @@ func byteplusSdkMetadataStructureMilvus20230101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/milvus/2023-01-01/structure.json", size: 38694, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/milvus/2023-01-01/structure.json", size: 38694, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -662,7 +663,7 @@ func byteplusSdkMetadataStructureMl_platform20240701StructureJson() (*asset, err
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ml_platform/2024-07-01/structure.json", size: 355908, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/ml_platform/2024-07-01/structure.json", size: 355908, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -682,7 +683,7 @@ func byteplusSdkMetadataStructureMongodb20220101StructureJson() (*asset, error) 
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/mongodb/2022-01-01/structure.json", size: 68004, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/mongodb/2022-01-01/structure.json", size: 68004, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -702,7 +703,7 @@ func byteplusSdkMetadataStructureNatgateway20200401StructureJson() (*asset, erro
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/natgateway/2020-04-01/structure.json", size: 39118, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/natgateway/2020-04-01/structure.json", size: 39118, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -722,7 +723,7 @@ func byteplusSdkMetadataStructurePrivate_zone20220601StructureJson() (*asset, er
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/private_zone/2022-06-01/structure.json", size: 76841, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/private_zone/2022-06-01/structure.json", size: 76841, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -742,7 +743,7 @@ func byteplusSdkMetadataStructureQuota20220701StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/quota/2022-07-01/structure.json", size: 29153, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/quota/2022-07-01/structure.json", size: 29153, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -762,7 +763,7 @@ func byteplusSdkMetadataStructureRabbitmq20220101StructureJson() (*asset, error)
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rabbitmq/2022-01-01/structure.json", size: 28408, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rabbitmq/2022-01-01/structure.json", size: 28408, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -782,7 +783,7 @@ func byteplusSdkMetadataStructureRds_mssql20220101StructureJson() (*asset, error
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rds_mssql/2022-01-01/structure.json", size: 48257, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rds_mssql/2022-01-01/structure.json", size: 48257, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -802,7 +803,7 @@ func byteplusSdkMetadataStructureRds_mysql20220101StructureJson() (*asset, error
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rds_mysql/2022-01-01/structure.json", size: 307296, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rds_mysql/2022-01-01/structure.json", size: 307296, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -822,7 +823,7 @@ func byteplusSdkMetadataStructureRds_postgresql20220101StructureJson() (*asset, 
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rds_postgresql/2022-01-01/structure.json", size: 101686, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/rds_postgresql/2022-01-01/structure.json", size: 101686, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -842,7 +843,7 @@ func byteplusSdkMetadataStructureRedis20201207StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/redis/2020-12-07/structure.json", size: 121483, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/redis/2020-12-07/structure.json", size: 121483, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -862,7 +863,7 @@ func byteplusSdkMetadataStructureResource_share20240101StructureJson() (*asset, 
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/resource_share/2024-01-01/structure.json", size: 21278, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/resource_share/2024-01-01/structure.json", size: 21278, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -882,7 +883,7 @@ func byteplusSdkMetadataStructureSmc20200401StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/smc/2020-04-01/structure.json", size: 24528, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/smc/2020-04-01/structure.json", size: 24528, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -902,7 +903,7 @@ func byteplusSdkMetadataStructureStorage_ebs20200401StructureJson() (*asset, err
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/storage_ebs/2020-04-01/structure.json", size: 65318, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/storage_ebs/2020-04-01/structure.json", size: 65318, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -922,7 +923,7 @@ func byteplusSdkMetadataStructureTag20220601StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/tag/2022-06-01/structure.json", size: 10033, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/tag/2022-06-01/structure.json", size: 10033, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -942,7 +943,7 @@ func byteplusSdkMetadataStructureTransitrouter20200401StructureJson() (*asset, e
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/transitrouter/2020-04-01/structure.json", size: 152889, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/transitrouter/2020-04-01/structure.json", size: 152889, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -962,7 +963,7 @@ func byteplusSdkMetadataStructureVedbm20220101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vedbm/2022-01-01/structure.json", size: 91010, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vedbm/2022-01-01/structure.json", size: 91010, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -982,7 +983,7 @@ func byteplusSdkMetadataStructureVefaas20240606StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vefaas/2024-06-06/structure.json", size: 82795, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vefaas/2024-06-06/structure.json", size: 82795, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1002,7 +1003,7 @@ func byteplusSdkMetadataStructureVepfs20220101StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vepfs/2022-01-01/structure.json", size: 93397, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vepfs/2022-01-01/structure.json", size: 93397, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1022,7 +1023,7 @@ func byteplusSdkMetadataStructureVke20220512StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vke/2022-05-12/structure.json", size: 217582, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vke/2022-05-12/structure.json", size: 217582, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1042,7 +1043,7 @@ func byteplusSdkMetadataStructureVmp20210303StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vmp/2021-03-03/structure.json", size: 142803, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vmp/2021-03-03/structure.json", size: 142803, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1062,7 +1063,7 @@ func byteplusSdkMetadataStructureVod20250701StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vod/2025-07-01/structure.json", size: 8887, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vod/2025-07-01/structure.json", size: 8887, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1082,7 +1083,27 @@ func byteplusSdkMetadataStructureVpc20200401StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vpc/2020-04-01/structure.json", size: 229894, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vpc/2020-04-01/structure.json", size: 229894, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
+	a := &asset{bytes: bytes, info: info}
+	return a, nil
+}
+
+var _byteplusSdkMetadataStructureVpc20250901StructureJson = []byte("\x1f\x8b\x08\x00\x00\x00\x00\x00\x00\xff\xec\x9d\xc1\x77\xda\xb8\x16\xc6\xd7\xe1\xaf\xe8\x61\xfd\xfa\x4e\x5e\xdf\x99\x45\xbb\xcb\x24\x64\x86\x69\xd3\xe6\x04\x86\xc5\xec\x84\xb9\xa1\x9e\x38\x92\x47\x92\x69\x69\x4f\xff\xf7\x39\xb6\x09\x18\x5b\x06\x1b\x44\x1a\x59\xdf\x22\x1b\xc3\x31\xf1\xef\x48\xf7\x7e\xf7\xd3\x95\xfc\xbd\x77\xd6\xbf\x7d\x98\x7f\x64\x8f\xd4\x7f\xf7\xaa\xbf\x88\x83\x37\xe7\x6f\x7e\x39\x7f\x7b\xfe\xbf\xfe\x7f\x7a\x67\xfd\x11\xc9\x45\x18\x3c\x7d\x94\x5d\x9a\x90\x54\xa1\xe0\xe9\xa5\xf4\xab\xaf\xcf\xdf\xbe\x7e\xfa\xb2\x96\x49\xa0\x13\x99\x7e\xfd\x7b\xef\xec\xac\x7f\xa1\x54\x38\xe7\xb7\x32\x5c\x30\x4d\xc3\xf8\x62\x36\x93\xa4\x14\xa9\xd5\xe7\x67\xfd\xcb\x28\x24\xae\xc7\xe2\x81\xf8\xd3\xb5\xb3\xfe\x78\x19\x67\x3f\xa8\xb4\x0c\xf9\x3c\xbd\x73\x7a\x75\xa8\x2e\xa4\x64\xcb\xfe\xbb\x57\xf7\x2c\x52\xb4\xbe\x7a\xc3\xe2\xd2\xb5\x1b\x16\x7f\x9a\xfe\x4d\x81\xfe\x40\x0b\x8a\xfa\xef\x5e\x9d\xaf\xbf\x9c\x5f\xaf\xdc\x63\xc0\x93\xc7\xca\xc5\x3f\x94\xe0\x1f\x93\xc7\x29\xc9\xd2\x47\x77\xf4\x4f\x12\x4a\x9a\x95\x2e\x5f\x0b\xf9\xc8\xd2\x7b\xf7\x9f\xfe\xe5\x5b\x26\xd3\xa7\x5b\x3d\xce\xfa\x41\x34\x3d\xae\xaf\xa5\x97\x7e\x64\x1f\xf4\x3f\x92\xfe\x22\xe4\xc3\x90\x6b\x92\xf7\x2c\xa0\xe1\xcc\x49\x24\x5a\x26\xb6\x88\x94\x07\x4e\x73\x1e\x85\x7f\xa2\x43\x23\x64\x44\x81\xe0\x33\x26\x97\x65\x30\x97\x22\xe1\xba\x4a\x27\xe4\x9a\xe6\x24\x5f\xf4\x70\x31\xf3\x09\xb9\xfe\xff\x9b\xb6\x90\x7a\x2b\x50\x69\xd8\x11\x41\xc8\x34\xdd\x89\x44\xd3\x98\x4d\x23\x42\xc4\x31\x8c\xa7\x0d\x1e\xc4\x9a\x51\x32\xe5\xa4\x1d\xe5\x60\x67\x50\x54\xe7\xcf\x24\x0e\x2e\xc3\x99\xfc\x35\x12\xc1\xc3\x7a\x06\xad\xa3\x50\xe5\x23\x0f\x99\xe5\x83\x67\x12\x07\x8e\x8e\x1c\x2b\x33\x68\x33\x70\xb4\x66\xc1\xe7\xb2\x90\x59\x8f\x9c\x21\x57\x9a\x71\x28\x1b\x68\x3d\xf3\xe8\x49\xf4\x67\x21\xc3\x6f\x34\xa2\x20\x91\xa1\x5e\xfe\x26\x45\x12\x0f\xe6\x45\xe9\xd7\x4f\x83\xce\x30\x76\x92\x96\xcd\x88\x03\x19\xb3\x61\x71\x45\x2a\x90\x61\xac\xf3\xa2\xd4\x6f\x16\xb7\x42\xea\x01\x37\x44\x13\x17\x6a\x01\x63\x38\x39\xa8\x14\xd8\xc0\x18\x69\x26\x1d\x2d\x8d\xac\xe3\x90\x42\x8b\x40\x44\x4e\x4e\x12\x9b\x52\xbf\x98\x5e\x7c\xce\xbc\x2b\x1c\x22\x91\x01\xb9\x0c\xc3\x76\xf9\x63\xd4\x21\x43\x0e\x21\x02\x21\x02\x21\x02\x21\x02\x21\x02\x21\x02\x21\x02\x21\x72\x72\x21\x72\x29\x89\x69\xaa\xb5\xd3\x90\x7a\x91\x7a\x9b\x98\x8b\xab\xb5\x7d\xbf\xa1\x64\x29\x78\x15\x6f\x07\x9c\x4d\x23\x32\x84\x98\xa9\x10\x11\x31\xee\x0f\x14\x19\x3e\x32\xb9\x3c\x60\x81\xbd\xbb\x40\xd0\x71\xb0\xad\xd4\xd2\x7f\x0e\x11\x04\xdd\x17\x07\x49\x5a\xef\x27\x90\xd3\x6d\x05\x16\xb5\xfd\x98\xcd\xaf\x85\x34\x0b\xda\x21\x8f\x13\xfd\xdf\xf7\xb4\x74\x12\x52\x9b\xd1\xb2\x97\xc2\xf1\x18\x27\x2c\x4a\xba\x1f\xab\x6d\x80\x34\xc4\xa6\xe6\xb7\xed\x6c\xd8\x2a\x15\x9f\x59\x8b\xd8\x80\x6b\xb9\x44\xd9\x89\xb2\x73\x1f\x0b\x1d\x72\x96\xb2\x40\x67\xd8\xa6\x16\xff\xaa\x7f\x17\xae\xfa\x59\x56\x3b\x9e\x32\x10\xab\x8f\xbc\x46\xb1\x89\xa9\xa8\xab\xd0\x85\xbc\x23\xef\xa2\x73\x1d\x79\x17\x1e\xcd\x61\xb1\x04\x38\x4a\xe5\x62\x21\xcc\x7a\x59\x6f\x97\x9e\xff\x18\x74\xfe\xd5\xd8\xed\xe1\xed\xa9\xae\xeb\x6e\xd8\xd9\xba\x3a\x07\x83\x8d\x22\x45\x91\xb3\x65\x16\x43\xe7\x40\xe7\x40\xe7\x1c\xb2\xcc\x02\x22\xa5\x7c\x5d\xea\xdb\xf5\x51\xed\x54\x11\x1c\x09\xd0\x3f\xcd\x73\x10\xc2\x3d\xb2\x67\xc7\x3d\xa1\x7c\x5e\xe8\xf8\x39\x89\xf2\xc9\x96\x85\xb7\xf6\x12\xb8\xeb\x97\x5b\xb4\x46\xa1\xfd\xa0\xfd\xea\xdb\x28\x20\x74\xca\x79\x3a\xef\x2e\xf1\x53\xe1\x6c\x9e\xfd\x50\x64\x1e\x6a\x9a\x56\xd0\xf6\x89\x19\xc3\xcd\xa0\x62\x5e\xe8\x88\xb1\x98\xa4\xff\x12\x1c\x4b\x75\x1b\x2d\x37\x89\x03\x08\x39\x08\x39\x08\xb9\x46\x2c\xb8\x1a\x91\x5c\x90\xf4\xbe\x33\x18\x76\xa6\x59\xa0\xa5\x29\xd6\x4b\x41\xfb\xf4\xe0\x07\xc1\xf2\x4f\xca\xb6\xc0\xb5\x47\xc7\x56\xee\xd4\xf1\xc8\x33\x89\x03\xcf\xa3\xce\x5a\xc1\x5d\x51\x44\x3b\x76\xd8\xe2\x98\xb6\x5a\x66\x86\xc6\xf0\xcd\x25\x70\xda\xe6\xb4\xdd\xc8\x87\x86\x47\x03\x27\x73\x2f\x00\x4e\x48\xa8\xa1\xb5\xbd\x7e\x80\x5d\x66\x25\x3e\xc5\x9a\xdc\x73\xcf\xa6\x40\x26\x2d\x43\xa7\x95\x6c\x77\xa1\xb5\x0c\xa7\x89\x2e\x1c\xcb\x8f\xbc\xd7\x82\x9f\xea\xca\xf9\xb6\x36\x35\xe6\x0d\xfb\x7a\x47\x2a\x89\xb4\x41\x7b\x7b\xb9\x31\xba\x3a\xa5\xbc\x77\x40\x70\x4e\x89\x11\xca\x57\xd8\xa6\xbd\xfc\xdb\x73\x5a\xff\x1e\x42\x48\x0e\x64\x14\x7e\x33\xcc\x11\x3f\x71\x94\x0e\xaf\x21\xef\x03\x6a\xfd\x8b\x96\xfc\x25\x02\x93\xbd\x4b\xa7\x0d\x5a\xe5\xa1\x99\x4e\x70\xe4\x95\xd3\xde\x81\x4d\x10\x63\x36\xbf\x0e\x23\x4d\xf2\x5a\xc8\xda\x5a\xcf\xaf\xa5\xa9\x66\x38\x2c\x82\xcd\x96\xb1\x3a\x9f\xb5\x4e\x80\xb6\x66\x89\xab\xe5\xaf\x38\xce\x75\x2f\xad\xfc\x5a\xb7\xe7\x6d\x77\x5b\xd8\x6c\x52\x70\xb8\x87\xcd\x0e\x86\x8a\xad\xb9\x59\xbd\xfb\x10\xaa\xcd\xd2\x02\x4e\xf5\x81\xbb\xd9\xf5\x63\x8e\x6c\xfb\x77\x2e\x9f\x73\x04\x2f\x13\x5e\xe6\x33\x04\x0c\x78\x99\x35\x47\x82\x21\x84\xe2\x7c\xb4\x3a\x1c\x48\x2a\xe8\x9e\xda\x29\xdf\x33\x2c\x5b\xf2\x1d\x4a\x15\x9a\x04\x9a\x04\x9a\xe4\x10\x1c\x58\x3b\xeb\x4e\xd2\x39\x0d\x0c\x8c\x8d\x9a\xe5\x8d\xed\x6c\xec\xf7\xa2\x91\x81\x85\x2d\xa4\xfe\x2e\x17\x1d\x03\xb5\xe1\x5a\xd1\xae\x9f\x70\x9c\x28\xd6\x48\x5a\x56\x17\x5b\xbd\x23\x86\x86\x71\xbc\x0c\x39\xc3\x70\x15\x4a\x0a\xb0\xcf\xdb\xf5\x57\xbc\xda\x04\xd1\x85\xae\x2b\xbc\xe3\xf5\x99\x23\xac\x82\x7f\x03\xff\x06\xfe\x0d\xfc\x1b\xf8\x37\x27\xc9\xc2\x9d\x2f\x19\x5b\xf1\x48\x47\x88\xf7\x44\x4c\x15\xf0\x76\x4e\xf6\xdb\xc5\x31\xb0\xb0\x85\xd4\x5f\x17\xe7\x18\xa8\x0d\x5d\x9c\x5d\x3f\xe1\x38\x51\xb8\x38\x6d\x6b\x8c\x6c\xab\x87\xc1\xbe\x71\x7a\x0f\xc8\x69\xd6\xd3\x73\x24\x85\xbd\xfd\xea\x8a\xee\x59\x12\xe9\x2a\xa3\xa9\x10\x11\x31\xfe\xa2\x21\xd9\x9c\x57\xa8\x49\x51\x93\xa2\x26\x45\x4d\x7a\x08\x0e\xd4\xa4\xe8\x29\x30\x16\xa4\x2b\x05\xd2\xf9\x32\xa0\x19\x08\x4c\x90\x35\x8a\x4f\x5f\x38\x49\xcc\x10\x73\x71\x97\x8b\x54\xcf\x9d\x89\x02\x84\xa3\x21\x7a\xec\x45\x1c\x82\xb1\xa9\x09\x61\xba\xb7\xe3\x0c\xe1\x3e\x34\xa1\x80\x7d\xb6\x65\x63\x61\x12\x07\x06\x07\xc6\xdd\xd1\x72\x1a\xfb\x65\x12\x07\xf0\x5e\xe0\xbd\xc0\x7b\x81\xf7\x02\xef\x05\xde\xcb\x73\x14\x53\x69\xca\xf1\xbb\x92\x5a\x13\x38\x0e\x9f\xbf\x35\x54\x7b\x80\x0d\x0b\xa8\xea\x8d\x1d\xa7\xd7\xa8\x7a\xea\xfc\x18\x6a\x40\x01\xe1\x3a\xe7\x50\x6b\x03\x7a\x96\xcb\x0b\x95\x92\x66\xc1\xe7\xda\x57\xd7\x38\x7e\x16\xbd\xc5\x96\x73\xbc\xcc\xc0\x34\x7a\x42\xc5\x94\x12\x41\xc8\x8c\xaf\xa8\xc1\xeb\x1b\x3b\xb4\x4e\x67\x73\xfb\x86\xcb\x8d\x42\xb6\x0d\xbd\xc2\x14\x9a\xc4\x41\xe5\x74\xbc\xfe\x88\x02\xc1\x67\x4c\x2e\x71\x70\x9e\xfb\xa6\xb8\xdd\xf0\xfb\x21\x54\x7a\xcc\xe6\xea\x5a\xc8\x3b\x52\xd9\x9e\x28\xec\xf9\x81\xc7\xb7\x3f\x17\xad\x06\x0b\x6a\xa3\x35\x8a\xd5\x67\x3f\x7b\x5c\x6c\x41\x7e\xe6\xac\x5c\x74\x0c\x4c\x91\xc5\x4f\x57\xab\x96\x84\x1d\x9c\xfe\xb9\x5c\xc7\x03\xdd\xe3\x76\xed\xff\x01\xc7\x69\x36\x00\xf5\x42\xc2\xd9\x4f\x57\xd7\x37\x62\x16\xde\x2f\x1b\xbc\xab\x30\x7f\xe1\xe3\x27\x3e\x26\xf9\xb8\x3a\xa8\x1a\xcb\xc4\xb9\x6f\x1c\xe3\x28\x0a\xf8\x3f\x0d\x88\xc0\x63\x4e\xbf\x2d\xa4\x7e\xda\x2c\x37\xe0\x6c\x1a\x91\x61\x9c\xf8\x16\x47\xb0\x6f\xba\x26\x31\x19\x5e\x7f\x8e\x98\xdb\xa1\xf3\xac\x2d\x46\x5b\x1c\x67\xbd\x63\x0a\x65\xbe\xba\x51\xd5\x61\x32\x61\x01\x62\x17\x0b\x4c\xa6\xe2\x64\xda\x77\x40\x1f\xe6\x13\x8e\x64\x6b\x7a\x16\x8c\x93\x40\x4e\x3f\xab\xee\x92\x88\x0a\xd3\x48\x0d\xe6\x92\x14\x8e\xc0\x84\xf3\xb0\xb3\xa4\x1c\x70\x47\x7b\x96\x8c\x11\xe6\x98\xf6\xe3\xb4\xbe\xd6\x4c\x1a\x36\x71\x78\x89\xc3\xe5\x03\x52\x4f\x95\x7d\x90\x8c\x71\x3e\x6a\xfb\x44\x3c\xe4\xc8\xc4\xc8\xc4\xc8\xc4\xc8\xc4\xc8\xc4\xc8\xc4\xc8\xc4\xa7\xcd\xc4\x75\x67\x08\x22\xdd\x74\xa4\x4d\xda\x7a\xbb\x38\x3c\xa5\xe2\x04\x32\x9f\xff\x80\xd9\x53\x10\xae\x5c\x8d\x48\x2e\x8c\xed\x62\xbe\x2c\x37\xe7\x24\x3c\x6f\x97\x5f\x43\x40\x04\xc9\x23\xc8\x1d\x2d\xc4\xc3\xf6\x91\xce\x70\xa1\x51\xfb\xee\x66\x81\xda\xb7\x87\xda\x17\xb5\xef\x6e\xa1\x8a\xda\x17\xb5\x6f\xbb\xc4\x0b\xd7\x19\x99\x17\x99\x17\x99\x17\x99\x17\x99\x17\x99\xf7\x64\x99\x77\xcc\xe6\xd5\x1d\xf2\xd8\x06\x8d\x6d\xd0\x55\x14\x63\x36\xbf\x16\xb2\x38\x60\xdc\xde\xf8\xdc\x02\x4d\xcd\xa3\x1f\x4a\x2c\xdb\xdb\xec\x24\xb3\x36\x53\xeb\x70\x68\x35\xfb\x98\x77\xdd\xac\xb3\x61\x68\x1d\xa9\xff\xe4\x4c\xa9\x70\xce\x6f\x65\xb8\x60\x9a\x86\xf1\xc5\x6c\x96\x56\x48\x85\xb8\x8d\xad\x98\x55\x19\xb8\x0d\xcb\xdf\x74\x56\x18\x47\x1a\x39\x1f\x39\xbf\x71\xce\x7f\x4f\x4b\x8f\x47\x44\x2f\xfb\xfb\xd1\xfb\xf1\x6f\x00\x00\x00\xff\xff\x8f\x7d\x63\xc1\xc9\x11\x01\x00")
+
+func byteplusSdkMetadataStructureVpc20250901StructureJsonBytes() ([]byte, error) {
+	return bindataRead(
+		_byteplusSdkMetadataStructureVpc20250901StructureJson,
+		"byteplus-sdk-metadata/structure/vpc/2025-09-01/structure.json",
+	)
+}
+
+func byteplusSdkMetadataStructureVpc20250901StructureJson() (*asset, error) {
+	bytes, err := byteplusSdkMetadataStructureVpc20250901StructureJsonBytes()
+	if err != nil {
+		return nil, err
+	}
+
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vpc/2025-09-01/structure.json", size: 70089, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1102,7 +1123,7 @@ func byteplusSdkMetadataStructureVpn20200401StructureJson() (*asset, error) {
 		return nil, err
 	}
 
-	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vpn/2020-04-01/structure.json", size: 93465, mode: os.FileMode(420), modTime: time.Unix(1778753514, 0)}
+	info := bindataFileInfo{name: "byteplus-sdk-metadata/structure/vpn/2020-04-01/structure.json", size: 93465, mode: os.FileMode(420), modTime: time.Unix(1779354874, 0)}
 	a := &asset{bytes: bytes, info: info}
 	return a, nil
 }
@@ -1207,6 +1228,7 @@ var _bindata = map[string]func() (*asset, error){
 	"byteplus-sdk-metadata/structure/vmp/2021-03-03/structure.json":            byteplusSdkMetadataStructureVmp20210303StructureJson,
 	"byteplus-sdk-metadata/structure/vod/2025-07-01/structure.json":            byteplusSdkMetadataStructureVod20250701StructureJson,
 	"byteplus-sdk-metadata/structure/vpc/2020-04-01/structure.json":            byteplusSdkMetadataStructureVpc20200401StructureJson,
+	"byteplus-sdk-metadata/structure/vpc/2025-09-01/structure.json":            byteplusSdkMetadataStructureVpc20250901StructureJson,
 	"byteplus-sdk-metadata/structure/vpn/2020-04-01/structure.json":            byteplusSdkMetadataStructureVpn20200401StructureJson,
 }
 
@@ -1485,6 +1507,9 @@ var _bintree = &bintree{nil, map[string]*bintree{
 			"vpc": &bintree{nil, map[string]*bintree{
 				"2020-04-01": &bintree{nil, map[string]*bintree{
 					"structure.json": &bintree{byteplusSdkMetadataStructureVpc20200401StructureJson, map[string]*bintree{}},
+				}},
+				"2025-09-01": &bintree{nil, map[string]*bintree{
+					"structure.json": &bintree{byteplusSdkMetadataStructureVpc20250901StructureJson, map[string]*bintree{}},
 				}},
 			}},
 			"vpn": &bintree{nil, map[string]*bintree{
