@@ -173,6 +173,23 @@
       font-weight: 400;
       line-height: 22px;
       text-align: center;
+      white-space: pre-line;
+    }
+
+    .error-detail {
+      width: 273px;
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 20px;
+      text-align: center;
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+
+    .error-detail[hidden] {
+      display: none;
     }
 
     .soft-mark {
@@ -441,7 +458,8 @@
       </div>
 
       <h1 class="status-title" id="statusTitle">Authentication successful</h1>
-      <p class="status-copy">You can close this page and return to<br>the terminal.</p>
+      <p class="status-copy" id="statusCopy">You can close this page and return to the terminal.</p>
+      <p class="error-detail" id="errorDetail" hidden></p>
     </main>
 
     <span class="soft-mark one" aria-hidden="true"></span>
@@ -453,21 +471,43 @@
 
   <script>
     (() => {
-      const callbackError = __CALLBACK_ERROR__;
+      const pageData = __CALLBACK_PAGE_DATA__;
+      const messages = pageData.messages || {};
+      const callbackError = typeof pageData.errorMessage === "string"
+        ? pageData.errorMessage
+        : "";
       const errorText = callbackError.trim();
       const hasError = errorText !== "";
-      const title = hasError
-        ? errorText || "Authentication failed"
-        : "Authentication successful";
+      const textOr = (value, fallback) =>
+        typeof value === "string" && value !== "" ? value : fallback;
 
-      // 后端已经统一处理 error/Error/error_description 的优先级，这里只根据注入结果切换状态。
-      // 错误文本通过 textContent 写入，避免 OAuth 错误内容被当作 HTML 执行。
+      const successTitle = textOr(messages.successTitle, "Authentication successful");
+      const failureTitle = textOr(messages.failureTitle, "Authentication failed");
+      const successCopy = textOr(
+        messages.successCopy,
+        "You can close this page and return to\nthe terminal.",
+      );
+      const failureCopy = textOr(messages.failureCopy, "Please return to the terminal.");
+      const oauthErrorLabel = textOr(messages.oauthErrorLabel, "OAuth error");
+
+      // 后端已统一处理 error/Error/error_description 的优先级；浏览器端只根据注入数据切换状态。
+      // 所有动态文本都通过 textContent 写入，避免 OAuth 错误内容被浏览器当作 HTML 执行。
+      document.documentElement.lang = textOr(pageData.lang, "en");
       document.documentElement.dataset.state = hasError ? "error" : "success";
-      document.title = hasError ? "BytePlus Authentication Failed" : "BytePlus Authentication Successful";
+      document.title = hasError
+        ? textOr(messages.documentTitleFailure, "BytePlus Authentication Failed")
+        : textOr(messages.documentTitleSuccess, "BytePlus Authentication Successful");
 
       const statusTitle = document.getElementById("statusTitle");
+      const statusCopy = document.getElementById("statusCopy");
+      const errorDetail = document.getElementById("errorDetail");
+      const title = hasError ? failureTitle : successTitle;
+
       statusTitle.textContent = title;
       statusTitle.title = title;
+      statusCopy.textContent = hasError ? failureCopy : successCopy;
+      errorDetail.hidden = !hasError;
+      errorDetail.textContent = hasError ? `${oauthErrorLabel}: ${errorText}` : "";
     })();
   </script>
 </body>
