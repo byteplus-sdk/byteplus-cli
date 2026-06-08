@@ -36,8 +36,6 @@ var (
 	configFileDirFunc = util.GetConfigFileDir
 )
 
-var configFileDirFunc = util.GetConfigFileDir
-
 const (
 	ModeSSO          = "sso"
 	ModeAK           = "ak"
