@@ -189,21 +189,6 @@ func expiredClientSecretExpiry() int64 {
 	return time.Now().Add(-time.Hour).UnixMilli()
 }
 
-func withTestConfigDir(t *testing.T) string {
-	t.Helper()
-
-	tmpDir := t.TempDir()
-	oldFunc := configFileDirFunc
-	configFileDirFunc = func() (string, error) {
-		return tmpDir, nil
-	}
-	t.Cleanup(func() {
-		configFileDirFunc = oldFunc
-	})
-
-	return tmpDir
-}
-
 func TestClearSsoProfileTemporaryCredentialsPreservesAccountAndRole(t *testing.T) {
 	profile := &Profile{
 		AccessKey:     "sts-ak",

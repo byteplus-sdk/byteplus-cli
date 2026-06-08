@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BytePlus Authentication</title>
+  <link rel="icon" href='data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 28 22"><path d="M0 4.93 7.64 1.1v16.15L0 21.07z" fill="%231664ff"/><path d="m9.7 4.93 7.64-3.83v16.15L9.7 21.07z" fill="%231664ff"/><path d="m19.4 4.93 7.64-3.83v16.15l-7.64 3.82z" fill="%231664ff"/></svg>'>
+  <style>
+    :root {
+      --bg-start: #f8f9ff;
+      --bg-mid: #f1f7ff;
+      --bg-end: #eef4ff;
+      --brand-blue: #1664ff;
+      --text-strong: #17191f;
+      --text-muted: #7d8798;
+      --card-border: rgba(40, 57, 92, 0.08);
+      --card-shadow: 0 24px 54px rgba(57, 79, 119, 0.14);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      width: 100%;
+      min-height: 100%;
+      margin: 0;
+    }
+
+    body {
+      overflow: hidden;
+      font-family:
+        "BytePlus Sans",
+        "Segoe UI",
+        "Helvetica Neue",
+        Arial,
+        sans-serif;
+      background: var(--bg-start);
+      color: var(--text-strong);
+    }
+
+    .auth-page {
+      position: relative;
+      width: 100vw;
+      min-width: 320px;
+      min-height: 100vh;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 52% 44%, rgba(255, 255, 255, 0.58), transparent 32%),
+        linear-gradient(112deg, var(--bg-start) 0%, var(--bg-mid) 58%, var(--bg-end) 100%);
+      isolation: isolate;
+    }
+
+    .auth-page::before {
+      position: absolute;
+      inset: 0;
+      z-index: -4;
+      content: "";
+      background:
+        linear-gradient(90deg, rgba(255, 255, 255, 0.28), transparent 28%),
+        radial-gradient(circle at 82% 4%, rgba(226, 228, 255, 0.56), transparent 31%);
+      pointer-events: none;
+    }
+
+    .background-3d {
+      position: absolute;
+      inset: 0;
+      z-index: -3;
+      display: none;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .prototype-bottom-art {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      z-index: -3;
+      display: block;
+      width: 100%;
+      height: 31.111vh;
+      object-fit: fill;
+      pointer-events: none;
+      user-select: none;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.18) 12%, #000 26%);
+      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0, 0, 0, 0.18) 12%, #000 26%);
+    }
+
+    .brand {
+      position: absolute;
+      top: 32px;
+      left: 40px;
+      z-index: 2;
+      display: inline-flex;
+      align-items: center;
+      gap: 0;
+      width: 120px;
+      height: 24px;
+      color: #3b3d43;
+      text-decoration: none;
+    }
+
+    .brand-image {
+      display: block;
+      width: 120px;
+      height: 24px;
+      object-fit: contain;
+    }
+
+    .status-card {
+      position: absolute;
+      top: 31.1vh;
+      left: 50%;
+      z-index: 2;
+      display: flex;
+      width: 333px;
+      min-height: 239px;
+      padding: 31.5px 30px 29.5px;
+      transform: translateX(-50%);
+      flex-direction: column;
+      align-items: center;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.76);
+      box-shadow: var(--card-shadow);
+      backdrop-filter: blur(18px);
+    }
+
+    .status-illustration {
+      position: relative;
+      width: 80px;
+      height: 92px;
+      margin: 0 0 8px;
+      flex: 0 0 auto;
+    }
+
+    .status-illustration svg,
+    .status-illustration img {
+      position: absolute;
+      top: 6px;
+      left: 0;
+      display: block;
+      width: 80px;
+      height: 80px;
+      overflow: visible;
+    }
+
+    .status-illustration .failure-art {
+      display: none;
+    }
+
+    .status-title {
+      width: 100%;
+      max-width: 273px;
+      min-height: 24px;
+      max-height: 48px;
+      margin: 0 0 8px;
+      overflow: hidden;
+      font-size: 18px;
+      font-weight: 600;
+      line-height: 24px;
+      text-align: center;
+      overflow-wrap: anywhere;
+    }
+
+    .status-copy {
+      width: 273px;
+      margin: 0;
+      color: var(--text-muted);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 22px;
+      text-align: center;
+      white-space: pre-line;
+    }
+
+    .error-detail {
+      width: 273px;
+      margin: 8px 0 0;
+      color: var(--text-muted);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 20px;
+      text-align: center;
+      overflow-wrap: anywhere;
+      white-space: pre-line;
+    }
+
+    .error-detail[hidden] {
+      display: none;
+    }
+
+    .soft-mark {
+      position: absolute;
+      z-index: -2;
+      width: 10px;
+      height: 23px;
+      border-radius: 1px;
+      background: rgba(232, 235, 255, 0.72);
+      pointer-events: none;
+    }
+
+    .soft-mark.one {
+      top: 197px;
+      left: 340px;
+    }
+
+    .soft-mark.two {
+      top: 220px;
+      left: 161px;
+      opacity: 0.56;
+    }
+
+    .lower-haze {
+      position: absolute;
+      right: -2%;
+      bottom: -72px;
+      z-index: -3;
+      width: 66%;
+      height: 178px;
+      border-radius: 100% 0 0 0 / 64% 0 0 0;
+      background:
+        linear-gradient(174deg, rgba(255, 255, 255, 0) 0%, rgba(230, 240, 255, 0.24) 48%, rgba(249, 252, 255, 0.9) 100%);
+      box-shadow: inset 0 1px 0 rgba(128, 172, 255, 0.08);
+      pointer-events: none;
+    }
+
+    .bottom-left-shape {
+      position: absolute;
+      bottom: -236px;
+      left: -248px;
+      z-index: -2;
+      width: 622px;
+      height: 384px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 45% 76%, rgba(255, 255, 255, 0.98) 0 18%, transparent 30%),
+        radial-gradient(circle at 72% 34%, rgba(84, 178, 255, 0.16), transparent 49%),
+        linear-gradient(148deg, rgba(87, 222, 237, 0.34), rgba(212, 236, 255, 0.22) 57%, rgba(249, 252, 255, 0.08));
+      box-shadow:
+        inset 0 22px 40px rgba(255, 255, 255, 0.88),
+        0 -4px 22px rgba(72, 202, 226, 0.12);
+      transform: rotate(8deg);
+      pointer-events: none;
+    }
+
+    .bottom-left-shape::before {
+      position: absolute;
+      top: 38px;
+      left: 58px;
+      width: 78%;
+      height: 34%;
+      content: "";
+      border-top: 8px solid rgba(82, 196, 231, 0.2);
+      border-radius: 52% 48% 0 0 / 100% 100% 0 0;
+      filter: blur(2px);
+      transform: rotate(9deg);
+    }
+
+    .bottom-left-shape::after {
+      position: absolute;
+      right: 44px;
+      bottom: 54px;
+      width: 63%;
+      height: 24%;
+      content: "";
+      border-top: 16px solid rgba(255, 255, 255, 0.46);
+      border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+      filter: blur(7px);
+    }
+
+    .bottom-right-shape {
+      position: absolute;
+      right: -126px;
+      bottom: -342px;
+      z-index: -2;
+      width: 792px;
+      height: 472px;
+      border-radius: 55% 45% 0 0 / 100% 92% 0 0;
+      background:
+        radial-gradient(circle at 31% 20%, rgba(255, 255, 255, 0.9) 0 7%, transparent 15%),
+        radial-gradient(circle at 26% 47%, rgba(229, 119, 255, 0.5), transparent 35%),
+        radial-gradient(circle at 72% 30%, rgba(42, 145, 255, 0.66), transparent 47%),
+        linear-gradient(124deg, rgba(236, 226, 255, 0.56), rgba(123, 98, 255, 0.7) 50%, rgba(43, 190, 226, 0.7));
+      box-shadow:
+        inset 18px 28px 36px rgba(255, 255, 255, 0.62),
+        inset -34px -16px 58px rgba(13, 113, 235, 0.13),
+        0 -16px 40px rgba(81, 134, 255, 0.12);
+      opacity: 0.84;
+      filter: saturate(0.86);
+      transform: rotate(-7deg);
+      pointer-events: none;
+    }
+
+    .bottom-right-shape::before {
+      position: absolute;
+      top: 18px;
+      left: 32px;
+      width: 80%;
+      height: 40%;
+      content: "";
+      border-top: 5px solid rgba(255, 255, 255, 0.48);
+      border-radius: 52% 48% 0 0 / 100% 100% 0 0;
+      filter: blur(1.5px);
+    }
+
+    .bottom-right-shape::after {
+      position: absolute;
+      right: 62px;
+      bottom: 30px;
+      width: 31%;
+      height: 52%;
+      content: "";
+      background: linear-gradient(142deg, rgba(70, 118, 255, 0.18), rgba(18, 150, 232, 0.26));
+      clip-path: polygon(32% 0, 100% 48%, 70% 100%, 0 48%);
+      filter: blur(0.5px);
+      opacity: 0.34;
+    }
+
+    .lower-haze,
+    .bottom-left-shape,
+    .bottom-right-shape {
+      display: none;
+    }
+
+    html[data-state="error"] .success-art {
+      display: none;
+    }
+
+    html[data-state="error"] .failure-art {
+      display: block;
+    }
+
+    @media (max-width: 640px) {
+      body {
+        overflow: auto;
+      }
+
+      .auth-page {
+        min-height: 620px;
+      }
+
+      .brand {
+        top: 24px;
+        left: 24px;
+      }
+
+      .status-card {
+        top: 176px;
+        width: calc(100vw - 48px);
+        max-width: 333px;
+      }
+
+      .bottom-right-shape {
+        right: -266px;
+        bottom: -328px;
+        transform: rotate(-7deg) scale(0.74);
+      }
+
+      .bottom-left-shape {
+        bottom: -248px;
+        left: -302px;
+        transform: rotate(8deg) scale(0.74);
+      }
+
+      .soft-mark.one,
+      .soft-mark.two {
+        display: none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-page">
+    <a class="brand" href="https://www.byteplus.com" aria-label="BytePlus">
+      <svg class="brand-image" viewBox="0 0 600 120" width="120" height="24" fill="none" aria-hidden="true" focusable="false">
+        <path fill="#0166fa" fill-rule="evenodd" clip-rule="evenodd" d="M119.00 12.00 L117.00 12.00 L112.00 17.00 L105.00 22.00 L92.00 34.00 L87.00 36.00 L85.00 40.00 L79.00 45.00 L72.00 48.00 L71.00 45.00 L71.00 11.00 L68.00 12.00 L68.00 10.00 L66.00 10.00 L68.00 12.00 L63.00 17.00 L56.00 22.00 L49.00 29.00 L48.00 29.00 L31.00 44.00 L24.00 47.00 L23.00 20.00 L2.00 20.00 L0.00 21.00 L0.00 99.00 L1.00 102.00 L15.00 91.00 L21.00 85.00 L24.00 85.00 L28.00 79.00 L35.00 74.00 L41.00 68.00 L48.00 65.00 L50.00 103.00 L56.00 97.00 L93.00 66.00 L96.00 67.00 L96.00 93.00 L119.00 93.00 Z"/>
+        <path fill="#4b4b4b" fill-rule="evenodd" clip-rule="evenodd" d="M488.00 36.00 L487.00 38.00 L487.00 71.00 L488.00 80.00 L491.00 86.00 L497.00 92.00 L504.00 95.00 L515.00 95.00 L520.00 93.00 L525.00 89.00 L527.00 91.00 L527.00 94.00 L540.00 93.00 L539.00 36.00 L526.00 37.00 L526.00 72.00 L525.00 75.00 L519.00 81.00 L514.00 83.00 L507.00 81.00 L502.00 76.00 L501.00 74.00 L500.00 36.00 Z M571.00 35.00 L564.00 37.00 L560.00 39.00 L555.00 44.00 L553.00 48.00 L553.00 59.00 L554.00 62.00 L558.00 66.00 L562.00 68.00 L584.00 73.00 L587.00 76.00 L587.00 79.00 L584.00 82.00 L578.00 84.00 L574.00 84.00 L569.00 83.00 L563.00 80.00 L559.00 77.00 L554.00 81.00 L551.00 85.00 L557.00 90.00 L563.00 93.00 L569.00 95.00 L582.00 95.00 L590.00 92.00 L596.00 87.00 L599.00 81.00 L599.00 73.00 L597.00 69.00 L590.00 63.00 L581.00 60.00 L577.00 60.00 L569.00 58.00 L567.00 57.00 L564.00 53.00 L565.00 51.00 L568.00 48.00 L570.00 47.00 L582.00 47.00 L588.00 51.00 L591.00 52.00 L598.00 46.00 L598.00 44.00 L592.00 39.00 L588.00 37.00 L580.00 35.00 Z M345.00 35.00 L339.00 37.00 L331.00 42.00 L328.00 45.00 L324.00 51.00 L321.00 61.00 L321.00 68.00 L322.00 73.00 L328.00 85.00 L335.00 91.00 L344.00 95.00 L359.00 95.00 L365.00 93.00 L371.00 90.00 L376.00 85.00 L377.00 83.00 L375.00 81.00 L368.00 76.00 L366.00 76.00 L362.00 80.00 L358.00 82.00 L354.00 83.00 L348.00 83.00 L340.00 79.00 L337.00 76.00 L335.00 72.00 L379.00 71.00 L379.00 57.00 L378.00 52.00 L374.00 45.00 L368.00 39.00 L358.00 35.00 Z M335.00 58.00 L337.00 54.00 L341.00 50.00 L345.00 48.00 L349.00 47.00 L353.00 47.00 L359.00 49.00 L365.00 55.00 L366.00 58.00 L364.00 60.00 L336.00 60.00 Z M301.00 22.00 L298.00 22.00 L294.00 23.00 L290.00 25.00 L288.00 25.00 L287.00 36.00 L269.00 37.00 L265.00 48.00 L259.00 60.00 L258.00 65.00 L254.00 72.00 L251.00 74.00 L247.00 66.00 L247.00 64.00 L237.00 45.00 L237.00 43.00 L234.00 37.00 L220.00 37.00 L224.00 44.00 L226.00 50.00 L235.00 67.00 L241.00 82.00 L244.00 86.00 L245.00 89.00 L245.00 93.00 L242.00 101.00 L240.00 103.00 L235.00 115.00 L235.00 117.00 L234.00 119.00 L248.00 118.00 L249.00 116.00 L249.00 114.00 L256.00 100.00 L267.00 72.00 L275.00 56.00 L275.00 54.00 L277.00 50.00 L288.00 50.00 L288.00 83.00 L291.00 89.00 L294.00 92.00 L298.00 94.00 L302.00 95.00 L315.00 94.00 L315.00 83.00 L307.00 83.00 L304.00 82.00 L301.00 79.00 L302.00 49.00 L315.00 49.00 L314.00 36.00 L302.00 37.00 Z M435.00 20.00 L426.00 18.00 L389.00 19.00 L390.00 94.00 L403.00 93.00 L404.00 66.00 L427.00 66.00 L437.00 63.00 L440.00 61.00 L446.00 54.00 L448.00 49.00 L448.00 34.00 L444.00 27.00 L440.00 23.00 Z M404.00 31.00 L427.00 31.00 L429.00 32.00 L433.00 36.00 L434.00 38.00 L434.00 46.00 L433.00 48.00 L429.00 52.00 L426.00 53.00 L403.00 52.00 Z M154.00 18.00 L154.00 94.00 L195.00 94.00 L200.00 93.00 L207.00 90.00 L213.00 84.00 L215.00 80.00 L215.00 76.00 L216.00 75.00 L215.00 66.00 L213.00 62.00 L206.00 56.00 L205.00 54.00 L210.00 49.00 L213.00 42.00 L213.00 34.00 L210.00 27.00 L205.00 22.00 L199.00 19.00 L194.00 18.00 Z M167.00 63.00 L194.00 62.00 L196.00 63.00 L201.00 68.00 L201.00 74.00 L200.00 76.00 L197.00 79.00 L195.00 80.00 L188.00 81.00 L167.00 79.00 Z M167.00 32.00 L192.00 31.00 L194.00 32.00 L198.00 36.00 L199.00 38.00 L199.00 42.00 L198.00 45.00 L195.00 48.00 L190.00 50.00 L167.00 48.00 Z M460.00 17.00 L461.00 94.00 L473.00 94.00 L473.00 17.00 Z"/>
+      </svg>
+    </a>
+
+    <svg class="background-3d" viewBox="0 0 1440 900" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <defs>
+        <linearGradient id="leftSurface" x1="17" y1="721" x2="291" y2="887" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#45d7e8" stop-opacity="0.56"></stop>
+          <stop offset="0.52" stop-color="#d6efff" stop-opacity="0.42"></stop>
+          <stop offset="1" stop-color="#f7fbff" stop-opacity="0.08"></stop>
+        </linearGradient>
+        <linearGradient id="leftRim" x1="12" y1="716" x2="276" y2="862" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#2fcddd" stop-opacity="0.46"></stop>
+          <stop offset="1" stop-color="#8dbdff" stop-opacity="0"></stop>
+        </linearGradient>
+        <linearGradient id="rightSheet" x1="840" y1="742" x2="1442" y2="660" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#f7fbff" stop-opacity="0.1"></stop>
+          <stop offset="0.42" stop-color="#edf5ff" stop-opacity="0.68"></stop>
+          <stop offset="1" stop-color="#eaf6ff" stop-opacity="0.9"></stop>
+        </linearGradient>
+        <linearGradient id="rightSurface" x1="876" y1="860" x2="1456" y2="758" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#f4edff" stop-opacity="0.58"></stop>
+          <stop offset="0.28" stop-color="#d777ff" stop-opacity="0.52"></stop>
+          <stop offset="0.62" stop-color="#625fff" stop-opacity="0.62"></stop>
+          <stop offset="1" stop-color="#18c4df" stop-opacity="0.72"></stop>
+        </linearGradient>
+        <radialGradient id="rightGlow" cx="0" cy="0" r="1" gradientTransform="matrix(132 0 0 118 1037 812)" gradientUnits="userSpaceOnUse">
+          <stop offset="0" stop-color="#ffffff" stop-opacity="0.92"></stop>
+          <stop offset="0.42" stop-color="#ffffff" stop-opacity="0.52"></stop>
+          <stop offset="1" stop-color="#ffffff" stop-opacity="0"></stop>
+        </radialGradient>
+        <filter id="softBlur" x="-12%" y="-24%" width="124%" height="148%">
+          <feGaussianBlur stdDeviation="8"></feGaussianBlur>
+        </filter>
+        <filter id="rimBlur" x="-8%" y="-20%" width="116%" height="140%">
+          <feGaussianBlur stdDeviation="2.2"></feGaussianBlur>
+        </filter>
+      </defs>
+
+      <path d="M0 704 C94 728 194 775 290 900 H0 Z" fill="url(#leftSurface)"></path>
+      <path d="M-18 711 C78 732 206 779 300 900" fill="none" stroke="url(#leftRim)" stroke-width="16" filter="url(#rimBlur)"></path>
+      <path d="M-6 866 C86 845 180 866 286 900 H0 Z" fill="#ffffff" opacity="0.32" filter="url(#softBlur)"></path>
+
+      <path d="M820 900 C800 824 828 768 907 737 C1046 682 1271 735 1440 635 V900 Z" fill="url(#rightSheet)" opacity="0.76"></path>
+      <path d="M870 900 C930 776 1051 718 1220 723 C1342 727 1430 783 1480 900 Z" fill="url(#rightSurface)" opacity="0.9"></path>
+      <path d="M881 899 C965 753 1072 721 1228 728 C1336 733 1418 779 1474 897" fill="none" stroke="#ffffff" stroke-opacity="0.44" stroke-width="5" filter="url(#rimBlur)"></path>
+      <path d="M958 900 C980 842 1007 812 1062 785 C1114 759 1189 751 1280 763 C1190 777 1124 815 1073 900 Z" fill="url(#rightGlow)" opacity="0.84"></path>
+      <path d="M1300 823 L1418 742 L1524 824 L1396 899 Z" fill="#1d8ff1" opacity="0.12"></path>
+    </svg>
+
+    <img class="prototype-bottom-art" src="assets/prototype-bottom.png" alt="" aria-hidden="true">
+
+    <main class="status-card" role="status" aria-live="polite">
+      <div class="status-illustration" aria-hidden="true">
+        <svg class="success-art" viewBox="0 0 80 80" focusable="false">
+          <defs>
+            <linearGradient id="successBlueArc" x1="-2" y1="10" x2="16" y2="32" gradientUnits="userSpaceOnUse">
+              <stop offset="0" stop-color="#3b82ff"></stop>
+              <stop offset="0.58" stop-color="#2f7df0"></stop>
+              <stop offset="1" stop-color="#0f61d9"></stop>
+            </linearGradient>
+          </defs>
+          <path d="M0.4 11.8c-3.1 9.5 2.6 16.3 9.6 13.4" fill="none" stroke="url(#successBlueArc)" stroke-width="5.6" stroke-linecap="butt"></path>
+          <rect x="68.1" y="12.3" width="4" height="10.8" rx="0.9" fill="#ffc43d" transform="rotate(30 70.1 17.7)"></rect>
+          <path d="M70 63.2c3.1-6.5 12.4-6.6 16.3-0.9" fill="none" stroke="#a47cff" stroke-width="4.6" stroke-linecap="butt"></path>
+          <circle cx="40" cy="41" r="27" fill="#25bf78" fill-opacity="0.18"></circle>
+          <circle cx="40" cy="41" r="24.8" fill="#1fbf75"></circle>
+          <circle cx="40" cy="41" r="20.5" fill="#43ce8d"></circle>
+          <circle cx="40" cy="41" r="23.2" fill="none" stroke="#0e9f60" stroke-opacity="0.35" stroke-width="2.2"></circle>
+          <path d="m29.7 40.8 7.1 7.1 13.9-14.7" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+
+        <svg class="failure-art" viewBox="0 0 80 80" focusable="false">
+          <circle cx="40" cy="41" r="27" fill="#e9402f" opacity="0.18"></circle>
+          <circle cx="40" cy="41" r="24.7" fill="#e9402f"></circle>
+          <circle cx="40" cy="41" r="20.3" fill="#ff5948"></circle>
+          <path d="m31.7 32.7 16.6 16.6M48.3 32.7 31.7 49.3" fill="none" stroke="#fff" stroke-width="4.8" stroke-linecap="round"></path>
+        </svg>
+      </div>
+
+      <h1 class="status-title" id="statusTitle">Authentication successful</h1>
+      <p class="status-copy" id="statusCopy">You can close this page and return to the terminal.</p>
+      <p class="error-detail" id="errorDetail" hidden></p>
+    </main>
+
+    <span class="soft-mark one" aria-hidden="true"></span>
+    <span class="soft-mark two" aria-hidden="true"></span>
+    <span class="lower-haze" aria-hidden="true"></span>
+    <span class="bottom-left-shape" aria-hidden="true"></span>
+    <span class="bottom-right-shape" aria-hidden="true"></span>
+  </div>
+
+  <script>
+    (() => {
+      const pageData = __CALLBACK_PAGE_DATA__;
+      const messages = pageData.messages || {};
+      const callbackError = typeof pageData.errorMessage === "string"
+        ? pageData.errorMessage
+        : "";
+      const errorText = callbackError.trim();
+      const hasError = errorText !== "";
+      const textOr = (value, fallback) =>
+        typeof value === "string" && value !== "" ? value : fallback;
+
+      const successTitle = textOr(messages.successTitle, "Authentication successful");
+      const failureTitle = textOr(messages.failureTitle, "Authentication failed");
+      const successCopy = textOr(
+        messages.successCopy,
+        "You can close this page and return to\nthe terminal.",
+      );
+      const failureCopy = textOr(messages.failureCopy, "Please return to the terminal.");
+      const oauthErrorLabel = textOr(messages.oauthErrorLabel, "OAuth error");
+
+      // 后端已统一处理 error/Error/error_description 的优先级；浏览器端只根据注入数据切换状态。
+      // 所有动态文本都通过 textContent 写入，避免 OAuth 错误内容被浏览器当作 HTML 执行。
+      document.documentElement.lang = textOr(pageData.lang, "en");
+      document.documentElement.dataset.state = hasError ? "error" : "success";
+      document.title = hasError
+        ? textOr(messages.documentTitleFailure, "BytePlus Authentication Failed")
+        : textOr(messages.documentTitleSuccess, "BytePlus Authentication Successful");
+
+      const statusTitle = document.getElementById("statusTitle");
+      const statusCopy = document.getElementById("statusCopy");
+      const errorDetail = document.getElementById("errorDetail");
+      const title = hasError ? failureTitle : successTitle;
+
+      statusTitle.textContent = title;
+      statusTitle.title = title;
+      statusCopy.textContent = hasError ? failureCopy : successCopy;
+      errorDetail.hidden = !hasError;
+      errorDetail.textContent = hasError ? `${oauthErrorLabel}: ${errorText}` : "";
+    })();
+  </script>
+</body>
+</html>

@@ -410,9 +410,6 @@ func newConfigureSsoCmd() *cobra.Command {
 			}
 
 			if inputProfile := cfg.Profiles[ssoFlags.Name]; inputProfile != nil {
-				if strings.ToLower(strings.TrimSpace(inputProfile.Mode)) != ModeSSO {
-					return fmt.Errorf("the profile [%v] already exists and is not an SSO profile. Overwriting a non-SSO profile is not permitted", ssoFlags.Name)
-				}
 				profile = inputProfile
 			}
 
