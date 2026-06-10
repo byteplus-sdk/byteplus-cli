@@ -105,15 +105,13 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		}
 
 		if mode == ModeConsoleLogin {
-			// console-login 的登录缓存目前由 CLI 独立维护，SDK CliProvider 尚不解析该 mode。
-			loginCreds, err := EnsureValidLoginToken(ctx.config, profileName)
+			// console-login 只由 CLI 负责刷新本地登录缓存；最终凭证统一交给 SDK CliProvider 读取。
+			_, err := EnsureValidLoginToken(ctx.config, profileName)
 			if err != nil {
 				return nil, err
 			}
-			creds = credentials.NewStaticCredentials(loginCreds.AccessKeyID, loginCreds.SecretAccessKey, loginCreds.SessionToken)
-		} else {
-			creds = clicreds.NewCliCredentials("", profileName)
 		}
+		creds = clicreds.NewCliCredentials("", profileName)
 
 		region = currentProfile.Region
 		endpoint = currentProfile.Endpoint

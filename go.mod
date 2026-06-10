@@ -3,9 +3,11 @@ module github.com/byteplus-sdk/byteplus-cli
 go 1.12
 
 require (
-	github.com/byteplus-sdk/byteplus-go-sdk-v2 v1.0.66
+	github.com/byteplus-sdk/byteplus-go-sdk-v2 v0.0.0-20260609084227-322725f83325
 	github.com/google/uuid v1.3.0
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/manifoldco/promptui v0.9.0
 	github.com/spf13/cobra v1.6.1
 )
+
+replace github.com/byteplus-sdk/byteplus-go-sdk-v2 => code.byted.org/eps-platform/byteplus-go-sdk-v2 v0.0.0-20260609084227-322725f83325

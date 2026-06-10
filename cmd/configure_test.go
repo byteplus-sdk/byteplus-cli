@@ -775,3 +775,28 @@ func TestCliProviderContractProfileNotFound(t *testing.T) {
 		t.Fatal("expected error when profile does not exist")
 	}
 }
+
+func TestCliProviderContractConsoleLoginModeRecognized(t *testing.T) {
+	configPath := writeTestConfig(t, &Configure{
+		Current: "console",
+		Profiles: map[string]*Profile{
+			"console": {
+				Name:         "console",
+				Mode:         ModeConsoleLogin,
+				LoginSession: "login-session",
+			},
+		},
+	})
+
+	creds := clicreds.NewCliCredentials(configPath, "console")
+	_, err := creds.Get()
+	if err == nil {
+		t.Fatal("expected console-login provider to require a token cache")
+	}
+	if strings.Contains(err.Error(), "unsupported mode") {
+		t.Fatalf("console-login should be handled by SDK CliProvider, got unsupported mode: %v", err)
+	}
+	if !strings.Contains(err.Error(), "console-login token cache") {
+		t.Fatalf("expected console-login provider cache error, got: %v", err)
+	}
+}
