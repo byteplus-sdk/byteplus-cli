@@ -66,9 +66,9 @@ type Profile struct {
 	SessionToken     string `json:"session-token"`
 	DisableSSL       *bool  `json:"disable-ssl"`
 	SsoSessionName   string `json:"sso-session-name,omitempty"`
-	AccountId        string `json:"account-id,omitempty"`
-	RoleName         string `json:"role-name,omitempty"`
-	StsExpiration    int64  `json:"sts-expiration,omitempty"`
+	AccountId        string `json:"account-id"`
+	RoleName         string `json:"role-name"`
+	StsExpiration    int64  `json:"sts-expiration"`
 	OidcTokenFile    string `json:"oidc-token-file,omitempty"`
 	RoleTrn          string `json:"role-trn,omitempty"`
 	LoginSession     string `json:"login-session,omitempty"`
@@ -313,6 +313,9 @@ func mergeProfile(base *Profile, input *Profile) *Profile {
 	}
 	if input.Mode != "" {
 		merged.Mode = input.Mode
+	}
+	if base == nil && merged.Mode == "" {
+		merged.Mode = ModeAK
 	}
 
 	return merged
