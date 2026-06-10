@@ -563,3 +563,80 @@ func TestGetRoleCredentialsRefreshesAccessTokenBeforeFetchingCredentials(t *test
 		t.Fatalf("portal access token = %q, want refreshed-access", fakePortal.lastAccessToken)
 	}
 }
+
+func TestEnsureValidStsTokenWritesToProfileNameWhenCurrentDiffers(t *testing.T) {
+	withTestConfigDir(t)
+	sso := setupSsoTokenTest(t)
+	cacheTokenForTest(t, sso, &SsoTokenCache{
+		AccessToken:           "cached-access",
+		RefreshToken:          "cached-refresh",
+		ExpiresAt:             time.Now().Add(time.Hour).Format(time.RFC3339),
+		ClientId:              "cached-client",
+		ClientSecret:          "cached-secret",
+		ClientSecretExpiresAt: validClientSecretExpiry(),
+	})
+
+	falseVal := false
+	cfg := &Configure{
+		Current: "default",
+		Profiles: map[string]*Profile{
+			"default": {
+				Name:       "default",
+				Mode:       ModeAK,
+				AccessKey:  "default-ak",
+				SecretKey:  "default-sk",
+				Region:     "cn-beijing",
+				DisableSSL: &falseVal,
+			},
+			"sso-prod": {
+				Name:           "sso-prod",
+				Mode:           ModeSSO,
+				Region:         "cn-beijing",
+				SsoSessionName: "test-session",
+				AccountId:      "account-id",
+				RoleName:       "role-name",
+				DisableSSL:     &falseVal,
+			},
+		},
+		SsoSession: map[string]*SsoSession{
+			"test-session": {
+				Name:               "test-session",
+				StartURL:           sso.StartURL,
+				Region:             sso.Region,
+				RegistrationScopes: []string{"cloudidentity:account:access", "offline_access"},
+			},
+		},
+	}
+	withTestCtxConfig(t, cfg)
+
+	fakePortal := &fakePortalClient{
+		resp: &GetRoleCredentialsResponse{
+			RoleCredentials: RoleCredentials{
+				AccessKeyID:     "new-ak",
+				SecretAccessKey: "new-sk",
+				SessionToken:    "new-token",
+				Expiration:      time.Now().Add(time.Hour).Unix(),
+			},
+		},
+	}
+	newPortalClientForSSO = func(region string) PortalClientAPI {
+		return fakePortal
+	}
+
+	sso.Profile = cfg.Profiles["sso-prod"]
+	sso.SsoSessionName = "test-session"
+	sso.Region = "cn-beijing"
+	if err := sso.EnsureValidStsToken(ctx); err != nil {
+		t.Fatalf("EnsureValidStsToken returned error: %v", err)
+	}
+
+	if cfg.Profiles["default"].AccessKey != "default-ak" {
+		t.Fatalf("default profile AccessKey = %q, want unchanged default-ak", cfg.Profiles["default"].AccessKey)
+	}
+	if cfg.Profiles["sso-prod"].AccessKey != "new-ak" {
+		t.Fatalf("sso-prod AccessKey = %q, want new-ak", cfg.Profiles["sso-prod"].AccessKey)
+	}
+	if cfg.Profiles["sso-prod"].SessionToken != "new-token" {
+		t.Fatalf("sso-prod SessionToken = %q, want new-token", cfg.Profiles["sso-prod"].SessionToken)
+	}
+}

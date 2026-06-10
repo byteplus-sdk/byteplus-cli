@@ -359,12 +359,16 @@ func (cl *ConsoleLogin) remoteAuthorize(
 		return "", "", fmt.Errorf("authorization code cannot be empty")
 	}
 
-	// Base64 decode the input.
+	// Console 登录页可能输出标准 Base64、带 padding 的 URL Base64 或无 padding 的 URL Base64。
+	// 这里逐一兼容，避免跨设备登录时因为浏览器侧去掉 padding 导致授权码无法解析。
 	decoded, err := base64.StdEncoding.DecodeString(rawInput)
 	if err != nil {
 		decoded, err = base64.URLEncoding.DecodeString(rawInput)
 		if err != nil {
-			return "", "", fmt.Errorf("base64 decoding authorization response: %w", err)
+			decoded, err = base64.RawURLEncoding.DecodeString(rawInput)
+			if err != nil {
+				return "", "", fmt.Errorf("base64 decoding authorization response: %w", err)
+			}
 		}
 	}
 

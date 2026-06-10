@@ -38,26 +38,44 @@ sudo cp bp /usr/local/bin
 
 #### Configure Credentials
 
-To call services, you need `AK`, `SK`, and `region`. You can configure them in two ways:
+To call services, `bp` resolves credentials from a profile or from the SDK default credential chain. Region can be configured in a profile, set through `BYTEPLUS_REGION`, or overridden at runtime with `---region`.
 
 1. Use `bp configure set`:
 
 ```shell
 bp configure set --profile test --region cn-beijing --access-key ak --secret-key sk --endpoint endpoint
+bp configure set --profile oidc-prod --mode oidc --region ap-southeast-1 --oidc-token-file /var/run/token --role-trn trn:iam::123456789012:role/example
+bp configure set --profile ecs-prod --mode ecsrole --region ap-southeast-1 --role-name example-role
 ```
 
 Supported Parameters:
 
 ```shell
 profile: Configuration name. If it exists, it will be updated; otherwise, a new one will be created.
+mode: Credential mode. Supported values are ak, sso, console-login, ramrolearn, oidc, ecsrole. Default is ak.
 access-key: Your AK
 secret-key: Your SK
-region: Region, e.g., cn-beijing
+region: Optional region, e.g., cn-beijing
 session-token: Required for role-based access
+account-id: Account ID, required for ramrolearn mode
+role-name: Role name, required for ramrolearn and ecsrole modes
+oidc-token-file: OIDC token file path, required for oidc mode
+role-trn: Role TRN, required for oidc mode
 disable-ssl: Whether to disable SSL, default is false
 endpoint: Optional; the default value is open.volcengineapi.com. Ignored when endpoint-resolver is standard.
 endpoint-resolver: Optional; set to standard (case-insensitive) to use the standard resolver. Otherwise, the CLI uses endpoint when provided.
 use-dual-stack: Optional; enable dual-stack endpoints when true. The default value is false.
+```
+
+Supported profile modes:
+
+```shell
+ak: Requires access-key and secret-key.
+sso: Created by bp configure sso and refreshed through bp sso login.
+console-login: Created by bp login and refreshed from the local login cache.
+ramrolearn: Requires access-key, secret-key, role-name, and account-id.
+oidc: Requires oidc-token-file and role-trn.
+ecsrole: Requires role-name.
 ```
 
 2. Use Environment Variables:
@@ -71,7 +89,31 @@ export BYTEPLUS_SESSION_TOKEN=sessionToken
 export BYTEPLUS_ENDPOINT=endpoint
 export BYTEPLUS_ENDPOINT_RESOLVER=standard
 export BYTEPLUS_USE_DUALSTACK=true
+export BYTEPLUS_PROFILE=profileName
+export BYTEPLUS_CLI_PROFILE=profileName
+export BYTEPLUS_CLI_CONFIG_FILE=/path/to/config.json
+export BYTEPLUS_OIDC_TOKEN_FILE=/var/run/token
+export BYTEPLUS_OIDC_ROLE_TRN=trn:iam::123456789012:role/example
+export BYTEPLUS_ECS_METADATA=roleName
+export BYTEPLUS_ECS_METADATA_DISABLED=false
+export BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS=false
 ```
+
+When no active profile is available, `bp` uses the SDK default credential chain:
+
+```shell
+Environment variables -> OIDC environment variables -> CLI profile -> ECS role
+```
+
+Set `BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS=true` to disable this fallback and require an explicit profile.
+
+Runtime overrides for business commands use three leading dashes and are not sent as API parameters:
+
+```shell
+bp ecs DescribeInstances ---profile prod ---region ap-southeast-1 --InstanceIds '["i-xxx"]'
+```
+
+In the example above, `---profile` and `---region` are consumed by the CLI, while `--InstanceIds` remains an API parameter.
 
 #### Other `configure` Commands
 
@@ -109,6 +151,9 @@ If profile doesn't exist, the switch fails with an error message.
 
 ```shell
 bp configure set --profile [name] --region [region] --access-key [AK] --secret-key [SK] --endpoint [endpoint]
+bp configure set --profile [name] --mode ramrolearn --access-key [AK] --secret-key [SK] --account-id [account_id] --role-name [role_name]
+bp configure set --profile [name] --mode oidc --oidc-token-file [token_file] --role-trn [role_trn]
+bp configure set --profile [name] --mode ecsrole --role-name [role_name]
 ```
 
 Additional Fields:
@@ -117,6 +162,11 @@ Additional Fields:
 * secret-key
 * region
 * session-token
+* mode
+* account-id
+* role-name
+* oidc-token-file
+* role-trn
 * disable-ssl
 * endpoint
 * endpoint-resolver

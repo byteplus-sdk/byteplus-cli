@@ -38,6 +38,10 @@ func NewParser(args []string) *Parser {
 }
 
 func (p *Parser) ReadArgs(ctx *Context) ([]string, error) {
+	if ctx == nil || ctx.fixedFlags == nil || ctx.dynamicFlags == nil {
+		return nil, fmt.Errorf("invalid context for parsing arguments")
+	}
+
 	var r []string
 	for {
 		arg, _, more, err := p.readArg(ctx)
@@ -54,52 +58,65 @@ func (p *Parser) ReadArgs(ctx *Context) ([]string, error) {
 }
 
 func (p *Parser) readArg(ctx *Context) (arg string, flag *Flag, more bool, err error) {
-	//跳出条件
 	if len(p.args) <= p.currentIndex {
+		if p.currentFlag != nil {
+			err = p.currentFlagValueError(ctx)
+			p.currentFlag = nil
+		}
 		more = false
 		return
 	}
-	//设置下一跳
+
 	more = true
-	//获取当前位置的入参
-	_arg := p.args[p.currentIndex]
+	rawArg := p.args[p.currentIndex]
 	p.currentIndex++
-	//计算是参数还是flag
-	var (
-		value string
-	)
-	flag, value, err = p.parseArg(_arg, ctx)
+
+	var value string
+	flag, value, err = p.parseArg(rawArg, ctx)
 	if err != nil {
 		return
 	}
 
-	//不允许两个连续的空--
 	if p.currentFlag != nil && flag != nil {
-		err = fmt.Errorf("--%s must set value. ", p.currentFlag.Name)
+		err = p.currentFlagValueError(ctx)
 	}
 
-	if flag == nil { //解析普通参数
+	if flag == nil {
 		if p.currentFlag != nil {
 			if value == "" {
-				err = fmt.Errorf("--%s must set value. ", p.currentFlag.Name)
+				err = p.currentFlagValueError(ctx)
 			}
 			p.currentFlag.SetValue(value)
 			p.currentFlag = nil
 		} else {
 			arg = value
 		}
-	} else { //解析flag
+	} else {
 		p.currentFlag = flag
 	}
 	return
 }
 
+func (p *Parser) currentFlagValueError(ctx *Context) error {
+	prefix := "--"
+	if ctx != nil && ctx.fixedFlags != nil && ctx.fixedFlags.GetByName(p.currentFlag.Name) == p.currentFlag {
+		prefix = "---"
+	}
+	return fmt.Errorf("%s%s must set value. ", prefix, p.currentFlag.Name)
+}
+
 func (p *Parser) parseArg(arg string, ctx *Context) (flag *Flag, value string, err error) {
-	if strings.HasPrefix(arg, "--") {
+	if strings.HasPrefix(arg, "---") {
+		if len(arg) == 3 {
+			err = fmt.Errorf("--- is not a valid flag")
+		} else {
+			// 三横线参数是 CLI 内部运行时覆盖参数，不参与 API 请求体构造。
+			flag, err = ctx.fixedFlags.AddByName(arg[3:])
+		}
+	} else if strings.HasPrefix(arg, "--") {
 		if len(arg) == 2 {
 			err = fmt.Errorf("-- is not support command")
 		} else {
-			//可变参数放入动态参数集合中
 			flag, err = ctx.dynamicFlags.AddByName(arg[2:])
 		}
 	} else {
