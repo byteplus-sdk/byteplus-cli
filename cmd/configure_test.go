@@ -579,6 +579,36 @@ func TestNewSimpleClientRegionOverride(t *testing.T) {
 	}
 }
 
+func TestNewSimpleClientEndpointAutoAddressingUsesStandardResolver(t *testing.T) {
+	falseVal := false
+	testCtx := NewContext()
+	testCtx.SetConfig(&Configure{
+		Current: "default",
+		Profiles: map[string]*Profile{
+			"default": {
+				Name:       "default",
+				Mode:       ModeAK,
+				AccessKey:  "ak",
+				SecretKey:  "sk",
+				Region:     "ap-southeast-1",
+				Endpoint:   "auto-addressing",
+				DisableSSL: &falseVal,
+			},
+		},
+	})
+
+	client, err := NewSimpleClient(testCtx)
+	if err != nil {
+		t.Fatalf("NewSimpleClient returned error: %v", err)
+	}
+	if client.Config.Endpoint != nil {
+		t.Fatalf("Endpoint = %q, want nil when endpoint=auto-addressing", *client.Config.Endpoint)
+	}
+	if client.Config.EndpointResolver == nil {
+		t.Fatal("EndpointResolver should be set when endpoint=auto-addressing")
+	}
+}
+
 func TestNewSimpleClientRegionOverrideFixesEmptyProfileRegion(t *testing.T) {
 	falseVal := false
 	testCtx := NewContext()

@@ -142,7 +142,11 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		config.WithEndpointResolver(endpoints.NewStandardEndpointResolver())
 	default:
 		if endpoint != "" {
-			config.WithEndpoint(endpoint)
+			if strings.ToLower(strings.TrimSpace(endpoint)) == "auto-addressing" {
+				config.WithEndpointResolver(endpoints.NewStandardEndpointResolver())
+			} else {
+				config.WithEndpoint(endpoint)
+			}
 		}
 	}
 

@@ -775,7 +775,6 @@ func (s *Sso) SetProfile() error {
 	}
 
 	cfg.Profiles[s.Profile.Name] = s.Profile
-	cfg.Current = s.Profile.Name
 
 	if err := WriteConfigToFile(cfg); err != nil {
 		return err

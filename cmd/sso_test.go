@@ -228,7 +228,15 @@ func TestSetProfileClearsTemporaryCredentialsWhenReconfiguringExistingProfile(t 
 	oldCtx := ctx
 	oldConfig := config
 	cfg := &Configure{
+		Current: "default",
 		Profiles: map[string]*Profile{
+			"default": {
+				Name:      "default",
+				Mode:      ModeAK,
+				AccessKey: "default-ak",
+				SecretKey: "default-sk",
+				Region:    "ap-southeast-1",
+			},
 			"dev": {
 				Name:           "dev",
 				Mode:           ModeSSO,
@@ -327,6 +335,9 @@ func TestSetProfileClearsTemporaryCredentialsWhenReconfiguringExistingProfile(t 
 	}
 	if profile.RoleName != "new-role" {
 		t.Fatalf("RoleName = %q, want new-role", profile.RoleName)
+	}
+	if cfg.Current != "default" {
+		t.Fatalf("Current = %q, want unchanged default", cfg.Current)
 	}
 }
 
