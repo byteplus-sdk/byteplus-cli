@@ -38,12 +38,18 @@ sudo cp bp /usr/local/bin
 
 #### Configure Credentials
 
-To call services, `bp` resolves credentials from a profile or from the SDK default credential chain. Region can be configured in a profile, set through `BYTEPLUS_REGION`, or overridden at runtime with `---region`.
+`bp` supports multiple credential modes and resolves credentials in the following order:
+
+1. Active or runtime-selected profile: if a current profile exists, or `---profile` selects one at runtime, `bp` uses the credentials in that profile.
+2. SDK default credential chain: if no profile is available, `bp` tries environment variables, OIDC environment variables, CLI profile, and ECS role credentials in order.
+3. If all methods fail, `bp` returns an error.
+
+Region can be configured in a profile, set through `BYTEPLUS_REGION`, or overridden at runtime with `---region`.
 
 1. Use `bp configure set`:
 
 ```shell
-bp configure set --profile test --region cn-beijing --access-key ak --secret-key sk --endpoint endpoint
+bp configure set --profile prod --region ap-southeast-1 --access-key ak --secret-key sk
 bp configure set --profile oidc-prod --mode oidc --region ap-southeast-1 --oidc-token-file /var/run/token --role-trn trn:iam::123456789012:role/example
 bp configure set --profile ecs-prod --mode ecsrole --region ap-southeast-1 --role-name example-role
 ```
@@ -55,38 +61,62 @@ profile: Configuration name. If it exists, it will be updated; otherwise, a new 
 mode: Credential mode. Supported values are ak, sso, console-login, ramrolearn, oidc, ecsrole. Default is ak.
 access-key: Your AK
 secret-key: Your SK
-region: Optional region, e.g., cn-beijing
-session-token: Required for role-based access
+region: Optional region, e.g., ap-southeast-1
+session-token: Optional temporary session token, used with STS credentials
 account-id: Account ID, required for ramrolearn mode
 role-name: Role name, required for ramrolearn and ecsrole modes
 oidc-token-file: OIDC token file path, required for oidc mode
 role-trn: Role TRN, required for oidc mode
 disable-ssl: Whether to disable SSL, default is false
-endpoint: Optional; the default value is open.volcengineapi.com. Ignored when endpoint-resolver is standard.
-endpoint-resolver: Optional; set to standard (case-insensitive) to use the standard resolver. Otherwise, the CLI uses endpoint when provided.
+endpoint: Optional custom endpoint. If omitted, the SDK resolves the endpoint automatically. Set to auto-addressing to use the standard endpoint resolver.
+endpoint-resolver: Optional; set to standard (case-insensitive) to use the standard resolver. This takes precedence over endpoint.
 use-dual-stack: Optional; enable dual-stack endpoints when true. The default value is false.
 ```
 
 Supported profile modes:
 
+| Mode | Description | Required profile fields |
+|------|-------------|-------------------------|
+| `ak` | Static AK/SK credentials (default) | `access-key`, `secret-key` |
+| `sso` | SSO sign-in | Configured through `bp configure sso`; use `bp configure profile` to make it active when needed |
+| `console-login` | Console Login with temporary STS credentials | Configured through `bp login`, which writes `login-session`; do not configure it manually |
+| `ramrolearn` | AssumeRole via STS | `access-key`, `secret-key`, `role-name`, `account-id` |
+| `oidc` | OIDC token exchange | `oidc-token-file`, `role-trn` |
+| `ecsrole` | ECS instance role through IMDS | `role-name` |
+
+When you configure a profile with `bp configure set`, all required fields for that mode must be written into the profile itself. Environment variables are used by the default credential chain when no active or runtime-selected profile is available.
+
+Credential mode examples:
+
 ```shell
-ak: Requires access-key and secret-key.
-sso: Created by bp configure sso and refreshed through bp sso login.
-console-login: Created by bp login and refreshed from the local login cache.
-ramrolearn: Requires access-key, secret-key, role-name, and account-id.
-oidc: Requires oidc-token-file and role-trn.
-ecsrole: Requires role-name.
+# AK/SK static credentials.
+bp configure set --profile ak-prod --mode ak --region ap-southeast-1 --access-key AK --secret-key SK
+
+# Assume role with AK/SK.
+bp configure set --profile role-prod --mode ramrolearn --region ap-southeast-1 --access-key AK --secret-key SK --account-id 123456789012 --role-name example-role
+
+# OIDC token file.
+bp configure set --profile oidc-prod --mode oidc --region ap-southeast-1 --oidc-token-file /var/run/token --role-trn trn:iam::123456789012:role/example
+
+# ECS role metadata credentials.
+bp configure set --profile ecs-prod --mode ecsrole --region ap-southeast-1 --role-name example-role
+
+# SSO and console-login are created by their dedicated flows.
+bp configure sso --profile sso-prod --sso-session corp
+bp login --profile console-prod --region ap-southeast-1
 ```
 
-2. Use Environment Variables:
+2. Use Environment Variables (default credential chain):
+
+If no active profile is available, `bp` uses the SDK default credential chain. Environment variables are the first source in that chain:
 
 ```shell
 export BYTEPLUS_ACCESS_KEY=AK
 export BYTEPLUS_SECRET_KEY=SK
-export BYTEPLUS_REGION=cn-beijing
+export BYTEPLUS_REGION=ap-southeast-1
 export BYTEPLUS_DISABLE_SSL=false
 export BYTEPLUS_SESSION_TOKEN=sessionToken
-export BYTEPLUS_ENDPOINT=endpoint
+export BYTEPLUS_ENDPOINT=auto-addressing
 export BYTEPLUS_ENDPOINT_RESOLVER=standard
 export BYTEPLUS_USE_DUALSTACK=true
 export BYTEPLUS_PROFILE=profileName
@@ -105,21 +135,35 @@ When no active profile is available, `bp` uses the SDK default credential chain:
 Environment variables -> OIDC environment variables -> CLI profile -> ECS role
 ```
 
-Set `BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS=true` to disable this fallback and require an explicit profile.
-
-Runtime overrides for business commands use three leading dashes and are not sent as API parameters:
+OIDC credentials can also be supplied entirely through environment variables:
 
 ```shell
-bp ecs DescribeInstances ---profile prod ---region ap-southeast-1 --InstanceIds '["i-xxx"]'
+export BYTEPLUS_OIDC_TOKEN_FILE=/var/run/token
+export BYTEPLUS_OIDC_ROLE_TRN=trn:iam::123456789012:role/example
+export BYTEPLUS_REGION=ap-southeast-1
 ```
 
-In the example above, `---profile` and `---region` are consumed by the CLI, while `--InstanceIds` remains an API parameter.
+ECS role credentials are resolved from IMDS in ECS environments. Set `BYTEPLUS_ECS_METADATA` to request a specific role name, or set `BYTEPLUS_ECS_METADATA_DISABLED=true` to disable ECS role lookup.
+
+Set `BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS=true` to disable this fallback and require an explicit profile.
+
+Endpoint behavior:
+
+```shell
+# Use SDK standard endpoint resolution.
+bp configure set --profile prod --endpoint auto-addressing
+bp configure set --profile prod --endpoint-resolver standard
+
+# Use a fixed endpoint.
+bp configure set --profile prod --endpoint ecs.ap-southeast-1.byteplusapi.com
+```
 
 #### Other `configure` Commands
 
 1. `bp` will prioritize using the credentials in the active profile.
-2. After adding or modifying a profile, it becomes the active profile.
-3. If multiple profiles exist, switch using:
+2. `bp configure set` makes the target profile active after adding or modifying it.
+3. `bp configure sso` creates or updates an SSO profile but does not switch the active profile automatically.
+4. If multiple profiles exist, switch using:
 
 ```shell
 bp configure profile --profile [profile_name]
@@ -156,6 +200,10 @@ bp configure set --profile [name] --mode oidc --oidc-token-file [token_file] --r
 bp configure set --profile [name] --mode ecsrole --role-name [role_name]
 ```
 
+After creating or modifying a profile with `bp configure set`, the active profile switches to the target profile.
+
+> Note: `region` is not mandatory during `configure set`, but it must be available at API call time through profile configuration, `---region`, or `BYTEPLUS_REGION`.
+
 Additional Fields:
 
 * access-key
@@ -167,6 +215,7 @@ Additional Fields:
 * role-name
 * oidc-token-file
 * role-trn
+* login-session (console-login field, written by `bp login`)
 * disable-ssl
 * endpoint
 * endpoint-resolver
@@ -193,7 +242,7 @@ This command creates or updates an SSO session for later use with `configure sso
 ```shell
 name: SSO session name; if omitted, enter interactive selection/creation mode
 start-url: SSO Start URL; required; if editing an existing session, Enter keeps the default
-region: SSO region; required; default is cn-beijing, existing session values are used as defaults
+region: SSO region; required; default is ap-southeast-1, existing session values are used as defaults
 registration-scopes: SSO scope list (comma-separated); allowed values are cloudidentity:account:access, offline_access
 ```
 
@@ -220,6 +269,8 @@ no-browser: Adding the `--no-browser` parameter to the command line disables the
 Notes:
 - If the profile already exists and is not an SSO profile, the command will refuse to overwrite it
 - If the SSO session does not exist, you will be guided to create it and enter Start URL, Region, and Scopes
+- `bp configure sso` does not switch the active profile automatically; run `bp configure profile --profile [profile name]` if you want to use it as the default profile
+- Reconfiguring an existing SSO profile clears old STS temporary credentials before writing the updated profile, so stale role credentials will not be reused
 
 #### SSO Login and Logout
 
@@ -244,44 +295,6 @@ Login behavior:
 - Only the device code flow is supported; use `--no-browser` to disable auto-opening the browser
 - When running business commands, if the cached SSO access token is expired or close to expiry, the CLI attempts to silently refresh the access token with the cached refresh_token before requesting role credentials
 - If the refresh_token is missing, the client registration has expired, or refresh fails, business commands do not automatically open a browser for re-authorization and will ask you to run `bp sso login` again
-
-##### SSO Logout (sso logout)
-
-```shell
-bp sso logout --sso-session [session name]
-```
-
-This command logs out from SSO by revoking the cached token and clearing local credentials. Parameters:
-
-```shell
-sso-session: the SSO session name to log out
-```
-
-Logout behavior:
-- If sso-session is not provided: error when no sessions are configured; logout the only session if one exists; otherwise enter interactive selection that includes "All SSO sessions"
-- Batch logout logs out each session and returns aggregated errors on failure
-
-#### SSO Login and Logout
-
-##### SSO Login (sso login)
-
-```shell
-bp sso login --profile [profile name]
-# or
-bp sso login --sso-session [session name]
-```
-
-This command logs in via SSO, obtains an access token, and caches it. Parameters:
-
-```shell
-profile: the SSO profile to use; must exist, be of sso type, and have sso-session configured
-sso-session: the SSO session to use; the session must exist and be valid
-no-browser: Adding the `--no-browser` parameter to the command line disables the browser from opening; omitting it will automatically open the browser by default.
-```
-
-Login behavior:
-- If neither profile nor sso-session is provided: error when no sessions are configured; use the only session if one exists; otherwise enter interactive selection with search
-- Only the device code flow is supported; use `--no-browser` to disable auto-opening the browser
 
 ##### SSO Logout (sso logout)
 
@@ -459,6 +472,24 @@ Basic structure:
 
 ```shell
 bp <service> <action> [--param1 val1 --param2 val2 ...]
+```
+
+##### Runtime Override Parameters
+
+When calling APIs, use the `---` prefix to pass CLI internal override parameters. These parameters do not conflict with API parameters:
+
+- `---profile`: Use a specific profile at runtime without modifying the configuration file. It must be followed by an existing profile name.
+- `---region`: Override region at runtime.
+
+```shell
+# Call an API with a specific profile.
+bp ecs DescribeInstances ---profile prod
+
+# Call an API with a specific profile and region override.
+bp ecs DescribeInstances ---profile prod ---region ap-southeast-1
+
+# `--` parameters are still sent to the API, while `---` parameters are consumed by the CLI.
+bp ecs DescribeInstances ---profile prod ---region ap-southeast-1 --InstanceIds '["i-xxx"]'
 ```
 
 Example:
