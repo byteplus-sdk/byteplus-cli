@@ -1,0 +1,36 @@
+{
+  "name": "@byteplus/cli",
+  "version": "1.0.13",
+  "description": "BytePlus CLI npm installer",
+  "bin": {
+    "bp": "bin/bp"
+  },
+  "scripts": {
+    "prepack": "node -e \"const fs=require('fs');fs.mkdirSync('bin',{recursive:true});fs.writeFileSync('bin/bp','#!/usr/bin/env node\\nconsole.error(\\\"bp not installed. Run npm rebuild for this package\\\");\\nprocess.exit(1);\\n');fs.chmodSync('bin/bp',0o755)\"",
+    "postinstall": "node install.js",
+    "test": "node install_test.js"
+  },
+  "files": [
+    "bin/",
+    "install.js"
+  ],
+  "keywords": [
+    "byteplus",
+    "cli",
+    "cloud"
+  ],
+  "license": "Apache-2.0",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/byteplus-sdk/byteplus-cli"
+  },
+  "os": [
+    "darwin",
+    "linux",
+    "win32",
+    "freebsd"
+  ],
+  "engines": {
+    "node": ">=14"
+  }
+}

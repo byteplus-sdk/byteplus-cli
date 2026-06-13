@@ -17,6 +17,7 @@
 package cmd
 
 import (
+	"sort"
 	"strings"
 )
 
@@ -153,4 +154,45 @@ func (m *ApiMeta) GetReqRequired(pattern string) bool {
 		}
 	}
 	return result
+}
+
+func (m *ApiMeta) GetRequestParams() (params []param) {
+	if m == nil || m.Request == nil || m.Request.MetaTypes == nil {
+		return nil
+	}
+
+	var traverse func(prefix string, meta *Meta)
+	traverse = func(prefix string, meta *Meta) {
+		if meta == nil || meta.MetaTypes == nil {
+			return
+		}
+
+		keys := make([]string, 0, len(meta.MetaTypes))
+		for key := range meta.MetaTypes {
+			keys = append(keys, key)
+		}
+		sort.Strings(keys)
+
+		for _, key := range keys {
+			mt := meta.MetaTypes[key]
+			paramKey := key
+			if prefix != "" {
+				paramKey = prefix + "." + key
+			}
+			if mt.TypeName == "object" && meta.ChildMetas != nil {
+				if child := meta.ChildMetas[key]; child != nil {
+					traverse(paramKey, child)
+					continue
+				}
+			}
+			params = append(params, param{
+				key:      paramKey,
+				typeName: m.GetReqTypeName(paramKey),
+				required: m.GetReqRequired(paramKey),
+			})
+		}
+	}
+
+	traverse("", m.Request)
+	return params
 }

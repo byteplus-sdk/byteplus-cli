@@ -18,6 +18,7 @@ package cmd
 
 import (
 	"fmt"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/endpoints"
 	"os"
 	"strconv"
 	"strings"
@@ -27,9 +28,6 @@ import (
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/client"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/client/metadata"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/credentials"
-	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/credentials/clicreds"
-	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/defaults"
-	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/endpoints"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/request"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/session"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/signer/byteplussign"
@@ -50,18 +48,19 @@ type SdkClientInfo struct {
 
 func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	var (
-		creds                              *credentials.Credentials
-		region, endpoint, endpointResolver string
-		disableSSl, useDualStack           bool
+		ak, sk, sessionToken, region, endpoint, endpointResolver string
+		httpProxy, httpsProxy                                    string
+		disableSSl, useDualStack                                 bool
 	)
 	if ctx == nil || ctx.fixedFlags == nil {
 		return nil, fmt.Errorf("invalid context for creating sdk client")
 	}
 
+	// first try to get ak/sk/region from config file
 	var currentProfile *Profile
 	profileName := ""
 	if ctx.config != nil {
-		profileName = ctx.config.Current
+		profileName = defaultProfileName(ctx.config)
 		overrideProfile := false
 		if f := ctx.fixedFlags.GetByName("profile"); f != nil && f.GetValue() != "" {
 			profileName = f.GetValue()
@@ -71,17 +70,93 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		if overrideProfile && currentProfile == nil {
 			return nil, fmt.Errorf("profile %q not found", profileName)
 		}
+		if currentProfile != nil {
+			mode := strings.ToLower(strings.TrimSpace(currentProfile.Mode))
+			switch mode {
+			case ModeSSO:
+				sso := &Sso{
+					Profile:        currentProfile,
+					SsoSessionName: currentProfile.SsoSessionName,
+					Region:         currentProfile.Region,
+				}
+				if err := sso.EnsureValidStsToken(ctx); err != nil {
+					return nil, err
+				}
+				fallthrough
+			case ModeAK, "":
+				ak = currentProfile.AccessKey
+				sk = currentProfile.SecretKey
+				region = currentProfile.Region
+				if region == "" {
+					region = os.Getenv("BYTEPLUS_REGION")
+				}
+				endpoint = currentProfile.Endpoint
+				if endpoint == "" {
+					endpoint = os.Getenv("BYTEPLUS_ENDPOINT")
+				}
+				endpointResolver = currentProfile.EndpointResolver
+				if endpointResolver == "" {
+					endpointResolver = os.Getenv("BYTEPLUS_ENDPOINT_RESOLVER")
+				}
+				sessionToken = currentProfile.SessionToken
+				httpProxy = currentProfile.HTTPProxy
+				httpsProxy = currentProfile.HTTPSProxy
+				if currentProfile.DisableSSL != nil {
+					disableSSl = *currentProfile.DisableSSL
+				}
+				if currentProfile.UseDualStack != nil {
+					useDualStack = *currentProfile.UseDualStack
+				}
+
+				if ak == "" {
+					return nil, fmt.Errorf("profile AccessKey not set")
+				}
+				if sk == "" {
+					return nil, fmt.Errorf("profile SecretKey not set")
+				}
+			case ModeConsoleLogin:
+				creds, err := EnsureValidLoginToken(ctx.config, profileName)
+				if err != nil {
+					return nil, err
+				}
+				ak = creds.AccessKeyID
+				sk = creds.SecretAccessKey
+				sessionToken = creds.SessionToken
+				region = currentProfile.Region
+				if region == "" {
+					region = os.Getenv("BYTEPLUS_REGION")
+				}
+				endpoint = currentProfile.Endpoint
+				if endpoint == "" {
+					endpoint = os.Getenv("BYTEPLUS_ENDPOINT")
+				}
+				endpointResolver = currentProfile.EndpointResolver
+				if endpointResolver == "" {
+					endpointResolver = os.Getenv("BYTEPLUS_ENDPOINT_RESOLVER")
+				}
+				httpProxy = currentProfile.HTTPProxy
+				httpsProxy = currentProfile.HTTPSProxy
+				if currentProfile.DisableSSL != nil {
+					disableSSl = *currentProfile.DisableSSL
+				}
+				if currentProfile.UseDualStack != nil {
+					useDualStack = *currentProfile.UseDualStack
+				}
+
+			default:
+				return nil, fmt.Errorf("unsupported credential mode %q, supported modes: ak, sso, console-login", currentProfile.Mode)
+			}
+		}
 	}
 
+	// if cannot get from config file, try to get from export variable
 	if currentProfile == nil {
-		if os.Getenv("BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS") == "true" {
-			return nil, fmt.Errorf("no profile configured and default credential chain is disabled (BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS=true)")
-		}
-		// 无 active profile 时交给 SDK 默认凭证链：Env -> OIDC -> CLI profile -> ECS role。
-		creds = defaults.NewDefaultCredentialProvider()
+		ak = os.Getenv("BYTEPLUS_ACCESS_KEY")
+		sk = os.Getenv("BYTEPLUS_SECRET_KEY")
 		region = os.Getenv("BYTEPLUS_REGION")
 		endpoint = os.Getenv("BYTEPLUS_ENDPOINT")
 		endpointResolver = os.Getenv("BYTEPLUS_ENDPOINT_RESOLVER")
+		sessionToken = os.Getenv("BYTEPLUS_SESSION_TOKEN")
 		ssl := os.Getenv("BYTEPLUS_DISABLE_SSL")
 		if ssl == "true" || ssl == "false" {
 			disableSSl, _ = strconv.ParseBool(ssl)
@@ -90,50 +165,31 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		if dualStack == "true" || dualStack == "false" {
 			useDualStack, _ = strconv.ParseBool(dualStack)
 		}
-	} else {
-		mode := strings.ToLower(strings.TrimSpace(currentProfile.Mode))
-		if mode == ModeSSO {
-			// SSO 的 STS 缓存由 CLI 负责刷新并写回 config，再由 SDK CliProvider 读取。
-			sso := &Sso{
-				Profile:        currentProfile,
-				SsoSessionName: currentProfile.SsoSessionName,
-				Region:         currentProfile.Region,
-			}
-			if err := sso.EnsureValidStsToken(ctx); err != nil {
-				return nil, err
-			}
-		}
 
-		if mode == ModeConsoleLogin {
-			// console-login 只由 CLI 负责刷新本地登录缓存；最终凭证统一交给 SDK CliProvider 读取。
-			_, err := EnsureValidLoginToken(ctx.config, profileName)
-			if err != nil {
-				return nil, err
-			}
+		if ak == "" {
+			return nil, fmt.Errorf("BYTEPLUS_ACCESS_KEY not set")
 		}
-		creds = clicreds.NewCliCredentials("", profileName)
-
-		region = currentProfile.Region
-		endpoint = currentProfile.Endpoint
-		endpointResolver = currentProfile.EndpointResolver
-		if currentProfile.DisableSSL != nil {
-			disableSSl = *currentProfile.DisableSSL
-		}
-		if currentProfile.UseDualStack != nil {
-			useDualStack = *currentProfile.UseDualStack
+		if sk == "" {
+			return nil, fmt.Errorf("BYTEPLUS_SECRET_KEY not set")
 		}
 	}
 
 	if f := ctx.fixedFlags.GetByName("region"); f != nil && f.GetValue() != "" {
 		region = f.GetValue()
 	}
+
+	if f := ctx.fixedFlags.GetByName("endpoint"); f != nil && f.GetValue() != "" {
+		endpoint = f.GetValue()
+		endpointResolver = ""
+	}
+
 	if region == "" {
 		return nil, fmt.Errorf("region not set, please set it via profile, ---region flag, or BYTEPLUS_REGION environment variable")
 	}
 
 	config := byteplus.NewConfig().
 		WithRegion(region).
-		WithCredentials(creds).
+		WithCredentials(credentials.NewStaticCredentials(ak, sk, sessionToken)).
 		WithDisableSSL(disableSSl)
 
 	resolverValue := strings.ToLower(strings.TrimSpace(endpointResolver))
@@ -153,6 +209,12 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	if useDualStack {
 		config.WithUseDualStack(true)
 	}
+	if httpProxy != "" {
+		config.WithHTTPProxy(httpProxy)
+	}
+	if httpsProxy != "" {
+		config.WithHTTPSProxy(httpsProxy)
+	}
 
 	sess, _ := session.NewSession(config)
 
@@ -160,6 +222,19 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		Config:  config,
 		Session: sess,
 	}, nil
+}
+
+func defaultProfileName(cfg *Configure) string {
+	if cfg != nil && cfg.Current != "" {
+		return cfg.Current
+	}
+	if profile := os.Getenv("BYTEPLUS_PROFILE"); profile != "" {
+		return profile
+	}
+	if profile := os.Getenv("BYTEPLUS_CLI_PROFILE"); profile != "" {
+		return profile
+	}
+	return ""
 }
 
 func (s *SdkClient) initClient(svc string, version string) *client.Client {

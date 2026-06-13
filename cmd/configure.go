@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/byteplus-sdk/byteplus-cli/util"
@@ -62,13 +63,15 @@ type Profile struct {
 	Region           string `json:"region"`
 	Endpoint         string `json:"endpoint"`
 	EndpointResolver string `json:"endpoint-resolver,omitempty"`
+	HTTPProxy        string `json:"http-proxy,omitempty"`
+	HTTPSProxy       string `json:"https-proxy,omitempty"`
 	UseDualStack     *bool  `json:"use-dual-stack,omitempty"`
 	SessionToken     string `json:"session-token"`
 	DisableSSL       *bool  `json:"disable-ssl"`
 	SsoSessionName   string `json:"sso-session-name,omitempty"`
-	AccountId        string `json:"account-id"`
-	RoleName         string `json:"role-name"`
-	StsExpiration    int64  `json:"sts-expiration"`
+	AccountId        string `json:"account-id,omitempty"`
+	RoleName         string `json:"role-name,omitempty"`
+	StsExpiration    int64  `json:"sts-expiration,omitempty"`
 	OidcTokenFile    string `json:"oidc-token-file,omitempty"`
 	RoleTrn          string `json:"role-trn,omitempty"`
 	LoginSession     string `json:"login-session,omitempty"`
@@ -185,7 +188,6 @@ func WriteConfigToFile(config *Configure) error {
 	return nil
 }
 
-// marshalConfig 使用稳定缩进格式写出配置，便于用户排查 profile 与凭证链配置。
 func marshalConfig(config *Configure) ([]byte, error) {
 	data, err := json.MarshalIndent(config, "", "    ")
 	if err != nil {
@@ -243,99 +245,64 @@ func setConfigProfile(profile *Profile) error {
 		*currentProfile.UseDualStack = false
 	}
 
-	nextProfile := mergeProfile(currentProfile, profile)
-	if err := validateProfileMode(nextProfile); err != nil {
-		return err
+	if profile.AccessKey != "" {
+		currentProfile.AccessKey = profile.AccessKey
 	}
-
-	cfg.Profiles[nextProfile.Name] = nextProfile
-	cfg.Current = nextProfile.Name
-	return WriteConfigToFile(cfg)
-}
-
-// mergeProfile 只合并用户显式传入的字段，避免局部更新 profile 时清空旧凭证或开关。
-func mergeProfile(base *Profile, input *Profile) *Profile {
-	merged := cloneProfile(base)
-	if merged == nil {
-		merged = &Profile{}
+	if profile.SecretKey != "" {
+		currentProfile.SecretKey = profile.SecretKey
 	}
-	if input == nil {
-		return merged
+	if profile.Region != "" {
+		currentProfile.Region = profile.Region
 	}
-
-	if input.Name != "" {
-		merged.Name = input.Name
+	if profile.Endpoint != "" {
+		currentProfile.Endpoint = profile.Endpoint
 	}
-	if input.AccessKey != "" {
-		merged.AccessKey = input.AccessKey
+	if profile.EndpointResolver != "" {
+		currentProfile.EndpointResolver = profile.EndpointResolver
 	}
-	if input.SecretKey != "" {
-		merged.SecretKey = input.SecretKey
+	if profile.HTTPProxy != "" {
+		currentProfile.HTTPProxy = profile.HTTPProxy
 	}
-	if input.Region != "" {
-		merged.Region = input.Region
+	if profile.HTTPSProxy != "" {
+		currentProfile.HTTPSProxy = profile.HTTPSProxy
 	}
-	if input.Endpoint != "" {
-		merged.Endpoint = input.Endpoint
+	if profile.SessionToken != "" {
+		currentProfile.SessionToken = profile.SessionToken
 	}
-	if input.EndpointResolver != "" {
-		merged.EndpointResolver = input.EndpointResolver
-	}
-	if input.SessionToken != "" {
-		merged.SessionToken = input.SessionToken
-	}
-	if input.DisableSSL != nil {
-		if merged.DisableSSL == nil {
-			merged.DisableSSL = new(bool)
-		}
-		*merged.DisableSSL = *input.DisableSSL
-	}
-	if input.UseDualStack != nil {
-		if merged.UseDualStack == nil {
-			merged.UseDualStack = new(bool)
-		}
-		*merged.UseDualStack = *input.UseDualStack
-	}
-	if input.SsoSessionName != "" {
-		merged.SsoSessionName = input.SsoSessionName
-	}
-	if input.AccountId != "" {
-		merged.AccountId = input.AccountId
-	}
-	if input.RoleName != "" {
-		merged.RoleName = input.RoleName
-	}
-	if input.OidcTokenFile != "" {
-		merged.OidcTokenFile = input.OidcTokenFile
-	}
-	if input.RoleTrn != "" {
-		merged.RoleTrn = input.RoleTrn
-	}
-	if input.Mode != "" {
-		merged.Mode = input.Mode
-	}
-	if base == nil && merged.Mode == "" {
-		merged.Mode = ModeAK
-	}
-
-	return merged
-}
-
-// cloneProfile 深拷贝含指针的 profile 字段，避免 merge 时意外修改调用方对象。
-func cloneProfile(profile *Profile) *Profile {
-	if profile == nil {
-		return nil
-	}
-	clone := *profile
 	if profile.DisableSSL != nil {
-		clone.DisableSSL = new(bool)
-		*clone.DisableSSL = *profile.DisableSSL
+		if currentProfile.DisableSSL == nil {
+			currentProfile.DisableSSL = new(bool)
+		}
+		*currentProfile.DisableSSL = *profile.DisableSSL
 	}
 	if profile.UseDualStack != nil {
-		clone.UseDualStack = new(bool)
-		*clone.UseDualStack = *profile.UseDualStack
+		if currentProfile.UseDualStack == nil {
+			currentProfile.UseDualStack = new(bool)
+		}
+		*currentProfile.UseDualStack = *profile.UseDualStack
 	}
-	return &clone
+	if profile.SsoSessionName != "" {
+		currentProfile.SsoSessionName = profile.SsoSessionName
+	}
+	if profile.AccountId != "" {
+		currentProfile.AccountId = profile.AccountId
+	}
+	if profile.RoleName != "" {
+		currentProfile.RoleName = profile.RoleName
+	}
+	if profile.OidcTokenFile != "" {
+		currentProfile.OidcTokenFile = profile.OidcTokenFile
+	}
+	if profile.RoleTrn != "" {
+		currentProfile.RoleTrn = profile.RoleTrn
+	}
+	if profile.Mode != "" {
+		currentProfile.Mode = strings.ToLower(strings.TrimSpace(profile.Mode))
+	}
+
+	cfg.Profiles[currentProfile.Name] = currentProfile
+	cfg.Current = currentProfile.Name
+	return WriteConfigToFile(cfg)
 }
 
 func getConfigProfile(profileName string) error {

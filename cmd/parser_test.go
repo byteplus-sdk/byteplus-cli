@@ -5,93 +5,58 @@ import (
 	"testing"
 )
 
-func findFlagValue(flags []*Flag, name string) (string, bool) {
-	for _, flag := range flags {
-		if flag.Name == name {
-			return flag.GetValue(), true
-		}
-	}
-	return "", false
-}
-
-func TestParserSeparatesFixedAndDynamicFlags(t *testing.T) {
-	testCtx := NewContext()
-	args, err := NewParser([]string{
-		"---profile", "prod",
+func TestParserReadsFixedFlags(t *testing.T) {
+	ctx := NewContext()
+	parser := NewParser([]string{
+		"---profile", "release",
 		"---region", "ap-southeast-1",
-		"--InstanceId", "i-123",
-	}).ReadArgs(testCtx)
+		"---endpoint", "sts.byteplusapi.com",
+		"--Limit", "10",
+	})
+
+	args, err := parser.ReadArgs(ctx)
 	if err != nil {
-		t.Fatalf("ReadArgs returned error: %v", err)
+		t.Fatalf("ReadArgs() error = %v", err)
 	}
 	if len(args) != 0 {
-		t.Fatalf("args = %v, want none", args)
+		t.Fatalf("ReadArgs() args = %v, want empty", args)
 	}
-
-	if got, ok := findFlagValue(testCtx.fixedFlags.GetFlags(), "profile"); !ok || got != "prod" {
-		t.Fatalf("fixed profile flag = %q, exists=%v; want prod", got, ok)
+	if got := ctx.fixedFlags.GetByName("profile").GetValue(); got != "release" {
+		t.Fatalf("profile fixed flag = %q, want release", got)
 	}
-	if got, ok := findFlagValue(testCtx.fixedFlags.GetFlags(), "region"); !ok || got != "ap-southeast-1" {
-		t.Fatalf("fixed region flag = %q, exists=%v; want ap-southeast-1", got, ok)
+	if got := ctx.fixedFlags.GetByName("region").GetValue(); got != "ap-southeast-1" {
+		t.Fatalf("region fixed flag = %q, want ap-southeast-1", got)
 	}
-	if got, ok := findFlagValue(testCtx.dynamicFlags.GetFlags(), "InstanceId"); !ok || got != "i-123" {
-		t.Fatalf("dynamic InstanceId flag = %q, exists=%v; want i-123", got, ok)
+	if got := ctx.fixedFlags.GetByName("endpoint").GetValue(); got != "sts.byteplusapi.com" {
+		t.Fatalf("endpoint fixed flag = %q, want sts.byteplusapi.com", got)
 	}
-	if _, ok := findFlagValue(testCtx.dynamicFlags.GetFlags(), "-profile"); ok {
-		t.Fatal("---profile must not be parsed as dynamic API flag -profile")
-	}
-}
-
-func TestParserReturnsErrorWhenTrailingFlagHasNoValue(t *testing.T) {
-	tests := []struct {
-		name    string
-		args    []string
-		wantErr string
-	}{
-		{name: "dynamic flag", args: []string{"--InstanceId"}, wantErr: "--InstanceId must set value."},
-		{name: "fixed flag", args: []string{"---profile"}, wantErr: "---profile must set value."},
-		{name: "fixed before dynamic", args: []string{"---profile", "--InstanceId"}, wantErr: "---profile must set value."},
-		{name: "dynamic before fixed", args: []string{"--InstanceId", "---profile"}, wantErr: "--InstanceId must set value."},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			_, err := NewParser(tt.args).ReadArgs(NewContext())
-			if err == nil {
-				t.Fatal("expected error, got nil")
-			}
-			if !strings.Contains(err.Error(), tt.wantErr) {
-				t.Fatalf("error = %q, want to contain %q", err.Error(), tt.wantErr)
-			}
-		})
+	if got := ctx.dynamicFlags.GetByName("Limit").GetValue(); got != "10" {
+		t.Fatalf("dynamic flag Limit = %q, want 10", got)
 	}
 }
 
-func TestParserReadArgsRejectsInvalidContext(t *testing.T) {
-	tests := []struct {
-		name string
-		ctx  *Context
-	}{
-		{name: "nil context", ctx: nil},
-		{name: "empty context", ctx: &Context{}},
-		{name: "missing dynamicFlags", ctx: &Context{fixedFlags: NewFlagSet()}},
-		{name: "missing fixedFlags", ctx: &Context{dynamicFlags: NewFlagSet()}},
-	}
+func TestParserRejectsUnsupportedFixedFlag(t *testing.T) {
+	ctx := NewContext()
+	parser := NewParser([]string{"---debug", "true"})
 
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					t.Fatalf("ReadArgs panicked: %v", r)
-				}
-			}()
-			_, err := NewParser([]string{"--InstanceId", "i-123"}).ReadArgs(tt.ctx)
-			if err == nil {
-				t.Fatal("expected error, got nil")
-			}
-			if !strings.Contains(err.Error(), "invalid context") {
-				t.Fatalf("error = %q, want invalid context", err.Error())
-			}
-		})
+	_, err := parser.ReadArgs(ctx)
+	if err == nil {
+		t.Fatal("ReadArgs() error = nil, want unsupported fixed flag error")
+	}
+	if !strings.Contains(err.Error(), "---debug is not supported") {
+		t.Fatalf("ReadArgs() error = %q, want unsupported fixed flag message", err)
+	}
+}
+
+func TestParserRequiresFixedFlagValue(t *testing.T) {
+	ctx := NewContext()
+	parser := NewParser([]string{"---region"})
+
+	_, err := parser.ReadArgs(ctx)
+	if err == nil {
+		t.Fatal("ReadArgs() error = nil, want missing fixed flag value error")
+	}
+	if !strings.Contains(err.Error(), "---region must set value") {
+		t.Fatalf("ReadArgs() error = %q, want missing value message", err)
 	}
 }

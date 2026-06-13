@@ -51,6 +51,13 @@ func (fs *FlagSet) GetFlags() []*Flag {
 	return fs.flags
 }
 
+func (fs *FlagSet) GetByName(name string) *Flag {
+	if fs == nil {
+		return nil
+	}
+	return fs.index["--"+name]
+}
+
 func (fs *FlagSet) AddFlag(f *Flag) {
 	if f.Name != "" {
 		key := "--" + f.Name

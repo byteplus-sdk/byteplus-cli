@@ -1,5 +1,6 @@
 # Visit https://goreleaser.com for documentation on how to customize this
 # behavior.
+project_name: byteplus-cli
 before:
   hooks:
     # this is just an example and not a requirement for provider building/publishing
@@ -28,9 +29,17 @@ builds:
     ignore:
       - goos: darwin
         goarch: '386'
+      - goos: darwin
+        goarch: arm
+      - goos: windows
+        goarch: arm
     binary: bp
 archives:
-  - format: zip
+  - id: zip
+    format: zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+  - id: targz
+    format: tar.gz
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
 checksum:
   name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
