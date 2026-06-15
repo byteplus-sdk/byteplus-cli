@@ -1,3 +1,5 @@
+English | [中文](README.CN.MD)
+
 ## Byteplus Command Line Tools
 
 ### Overview
