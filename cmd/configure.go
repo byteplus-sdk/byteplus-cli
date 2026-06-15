@@ -40,6 +40,9 @@ const (
 	ModeSSO          = "sso"
 	ModeAK           = "ak"
 	ModeConsoleLogin = "console-login"
+	ModeRamRoleArn   = "ramrolearn"
+	ModeOIDC         = "oidc"
+	ModeEcsRole      = "ecsrole"
 
 	ConfigFile = "config.json"
 )
@@ -63,9 +66,11 @@ type Profile struct {
 	SessionToken     string `json:"session-token"`
 	DisableSSL       *bool  `json:"disable-ssl"`
 	SsoSessionName   string `json:"sso-session-name,omitempty"`
-	AccountId        string `json:"account-id,omitempty"`
-	RoleName         string `json:"role-name,omitempty"`
-	StsExpiration    int64  `json:"sts-expiration,omitempty"`
+	AccountId        string `json:"account-id"`
+	RoleName         string `json:"role-name"`
+	StsExpiration    int64  `json:"sts-expiration"`
+	OidcTokenFile    string `json:"oidc-token-file,omitempty"`
+	RoleTrn          string `json:"role-trn,omitempty"`
 	LoginSession     string `json:"login-session,omitempty"`
 }
 
@@ -159,7 +164,11 @@ func WriteConfigToFile(config *Configure) error {
 	}()
 	_ = tempFile.Chmod(0600)
 
-	if err := json.NewEncoder(tempFile).Encode(config); err != nil {
+	data, err := marshalConfig(config)
+	if err != nil {
+		return err
+	}
+	if _, err := tempFile.Write(data); err != nil {
 		return err
 	}
 	if err := tempFile.Close(); err != nil {
@@ -174,6 +183,15 @@ func WriteConfigToFile(config *Configure) error {
 	}
 	_ = os.Chmod(targetPath, 0600)
 	return nil
+}
+
+// marshalConfig 使用稳定缩进格式写出配置，便于用户排查 profile 与凭证链配置。
+func marshalConfig(config *Configure) ([]byte, error) {
+	data, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		return nil, err
+	}
+	return append(data, '\n'), nil
 }
 
 func (config *Configure) SetRandomCurrentProfile() {
@@ -217,7 +235,7 @@ func setConfigProfile(profile *Profile) error {
 	if currentProfile, exist = cfg.Profiles[profile.Name]; !exist {
 		currentProfile = &Profile{
 			Name:         profile.Name,
-			Mode:         "AK",
+			Mode:         ModeAK,
 			DisableSSL:   new(bool),
 			UseDualStack: new(bool),
 		}
@@ -225,40 +243,99 @@ func setConfigProfile(profile *Profile) error {
 		*currentProfile.UseDualStack = false
 	}
 
-	if profile.AccessKey != "" {
-		currentProfile.AccessKey = profile.AccessKey
-	}
-	if profile.SecretKey != "" {
-		currentProfile.SecretKey = profile.SecretKey
-	}
-	if profile.Region != "" {
-		currentProfile.Region = profile.Region
-	}
-	if profile.Endpoint != "" {
-		currentProfile.Endpoint = profile.Endpoint
-	}
-	if profile.EndpointResolver != "" {
-		currentProfile.EndpointResolver = profile.EndpointResolver
-	}
-	if profile.SessionToken != "" {
-		currentProfile.SessionToken = profile.SessionToken
-	}
-	if profile.DisableSSL != nil {
-		*currentProfile.DisableSSL = *profile.DisableSSL
-	}
-	if profile.UseDualStack != nil {
-		if currentProfile.UseDualStack == nil {
-			currentProfile.UseDualStack = new(bool)
-		}
-		*currentProfile.UseDualStack = *profile.UseDualStack
-	}
-	if profile.SsoSessionName != "" {
-		currentProfile.SsoSessionName = profile.SsoSessionName
+	nextProfile := mergeProfile(currentProfile, profile)
+	if err := validateProfileMode(nextProfile); err != nil {
+		return err
 	}
 
-	cfg.Profiles[currentProfile.Name] = currentProfile
-	cfg.Current = currentProfile.Name
+	cfg.Profiles[nextProfile.Name] = nextProfile
+	cfg.Current = nextProfile.Name
 	return WriteConfigToFile(cfg)
+}
+
+// mergeProfile 只合并用户显式传入的字段，避免局部更新 profile 时清空旧凭证或开关。
+func mergeProfile(base *Profile, input *Profile) *Profile {
+	merged := cloneProfile(base)
+	if merged == nil {
+		merged = &Profile{}
+	}
+	if input == nil {
+		return merged
+	}
+
+	if input.Name != "" {
+		merged.Name = input.Name
+	}
+	if input.AccessKey != "" {
+		merged.AccessKey = input.AccessKey
+	}
+	if input.SecretKey != "" {
+		merged.SecretKey = input.SecretKey
+	}
+	if input.Region != "" {
+		merged.Region = input.Region
+	}
+	if input.Endpoint != "" {
+		merged.Endpoint = input.Endpoint
+	}
+	if input.EndpointResolver != "" {
+		merged.EndpointResolver = input.EndpointResolver
+	}
+	if input.SessionToken != "" {
+		merged.SessionToken = input.SessionToken
+	}
+	if input.DisableSSL != nil {
+		if merged.DisableSSL == nil {
+			merged.DisableSSL = new(bool)
+		}
+		*merged.DisableSSL = *input.DisableSSL
+	}
+	if input.UseDualStack != nil {
+		if merged.UseDualStack == nil {
+			merged.UseDualStack = new(bool)
+		}
+		*merged.UseDualStack = *input.UseDualStack
+	}
+	if input.SsoSessionName != "" {
+		merged.SsoSessionName = input.SsoSessionName
+	}
+	if input.AccountId != "" {
+		merged.AccountId = input.AccountId
+	}
+	if input.RoleName != "" {
+		merged.RoleName = input.RoleName
+	}
+	if input.OidcTokenFile != "" {
+		merged.OidcTokenFile = input.OidcTokenFile
+	}
+	if input.RoleTrn != "" {
+		merged.RoleTrn = input.RoleTrn
+	}
+	if input.Mode != "" {
+		merged.Mode = input.Mode
+	}
+	if base == nil && merged.Mode == "" {
+		merged.Mode = ModeAK
+	}
+
+	return merged
+}
+
+// cloneProfile 深拷贝含指针的 profile 字段，避免 merge 时意外修改调用方对象。
+func cloneProfile(profile *Profile) *Profile {
+	if profile == nil {
+		return nil
+	}
+	clone := *profile
+	if profile.DisableSSL != nil {
+		clone.DisableSSL = new(bool)
+		*clone.DisableSSL = *profile.DisableSSL
+	}
+	if profile.UseDualStack != nil {
+		clone.UseDualStack = new(bool)
+		*clone.UseDualStack = *profile.UseDualStack
+	}
+	return &clone
 }
 
 func getConfigProfile(profileName string) error {

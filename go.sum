@@ -1,6 +1,6 @@
 github.com/avast/retry-go v3.0.0+incompatible/go.mod h1:XtSnn+n/sHqQIpZ10K1qAevBhOOCWBLXXy3hyiqqBrY=
-github.com/byteplus-sdk/byteplus-go-sdk-v2 v1.0.43 h1:VmV0vdlRnc+WAL5Rw2eKDEKSSJJYRgeZvHjoRlToObU=
-github.com/byteplus-sdk/byteplus-go-sdk-v2 v1.0.43/go.mod h1:eqR3bDX3XtdPBcB9vERznOyi0MAcAI1GFAdcRspNMBU=
+github.com/byteplus-sdk/byteplus-go-sdk-v2 v1.0.68 h1:HBus7SmCF5Pzd84pMQE4699CCMR6Jxyvdxa1xnUvK4Y=
+github.com/byteplus-sdk/byteplus-go-sdk-v2 v1.0.68/go.mod h1:eqR3bDX3XtdPBcB9vERznOyi0MAcAI1GFAdcRspNMBU=
 github.com/byteplus-sdk/byteplus-sdk-golang v1.0.16 h1:rrlsRCitt/isPkfLGPQFHf8G65iyxSgNgG2PbAR5v4Y=
 github.com/byteplus-sdk/byteplus-sdk-golang v1.0.16/go.mod h1:7iCaE+dR9EycrJU0GQyMhptbInLbQhsKXiDKDjNi8Vs=
 github.com/chzyer/logex v1.1.10 h1:Swpa1K6QvQznwJRcfTfQJmTE72DqScAa40E+fbHEXEE=
