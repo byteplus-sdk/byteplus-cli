@@ -229,6 +229,36 @@ bp configure delete --profile [profile_name]
 
 If the deleted profile is the current one, `bp` will randomly pick another available profile.
 
+#### SSO Quick Start
+
+SSO configuration has two layers: `sso-session` stores the enterprise SSO entry point (Start URL, Region, Scopes), and an SSO profile stores the account and role selected for API calls. For first-time setup, use this sequence:
+
+```shell
+# 1. Create an SSO session. registration-scopes can be omitted to use the default value.
+bp configure sso-session --name my-sso --start-url https://{custom-sso-domain}/userportal --region ap-southeast-1
+
+# 2. Create an SSO profile, complete device authorization, and select account and role.
+bp configure sso --profile my-dev --sso-session my-sso
+
+# 3. Switch the active profile if you want business commands to use it by default.
+bp configure profile --profile my-dev
+
+# 4. Run business commands. The CLI refreshes temporary STS credentials as needed.
+bp [service] [action] [params]
+```
+
+`bp configure sso` writes the SSO profile but does not switch the active profile automatically. If you skip step 3, business commands continue to use the previous current profile.
+
+#### SSO Command Relationships
+
+| Command | When to use it | Main effect | Switches active profile |
+| --- | --- | --- | --- |
+| `bp configure sso-session` | Usually once for each SSO entry point | Saves Start URL, Region, and Scopes for reuse by SSO profiles | No |
+| `bp configure sso` | Once for each account and role combination | Links an SSO session, performs first authorization, selects account and role, and writes an SSO profile | No |
+| `bp configure profile --profile [profile name]` | When business commands should use a profile by default | Switches the active profile | Yes |
+| `bp sso login` | When prompted to log in again, or when refreshing SSO login state explicitly | Runs device authorization again and caches a new access token | No |
+| `bp sso logout` | When logging out of one or all SSO sessions | Revokes cached tokens, deletes token cache, and clears temporary STS credentials | No |
+
 #### SSO Session Management
 
 ###### Configure SSO Session (configure sso-session)
@@ -311,6 +341,27 @@ sso-session: the SSO session name to log out
 Logout behavior:
 - If sso-session is not provided: error when no sessions are configured; logout the only session if one exists; otherwise enter interactive selection that includes "All SSO sessions"
 - Batch logout logs out each session and returns aggregated errors on failure
+- Logout removes cached tokens and clears SSO profile temporary credential fields (`access-key`, `secret-key`, `session-token`, `sts-expiration`), but it does not delete SSO profiles, SSO session configuration, `account-id`, or `role-name`
+
+#### SSO FAQ
+
+- After `bp configure sso`, why are business commands still using the old account?
+  Run `bp configure profile --profile [profile name]` to switch the active profile. `configure sso` writes a profile but does not switch `current`.
+
+- When should I run `bp sso login`?
+  First-time `bp configure sso` already performs authorization. Daily business commands reuse or silently refresh credentials. Run `bp sso login` only when the CLI asks you to log in again, or when you want to refresh the SSO login state explicitly.
+
+- Why does `bp sso login` open the authorization flow each time?
+  It is an explicit login command. Each run starts device authorization again and does not silently use an existing refresh token.
+
+- How do I switch accounts or roles?
+  Run `bp configure sso --profile [profile name] --sso-session [session name]` again and select a different account or role.
+
+- How do I log in on a machine without a browser?
+  Add `--no-browser` to `bp configure sso` or `bp sso login`, then open the printed authorization URL in a browser.
+
+- What should I use for scopes?
+  Usually omit them. The default is `cloudidentity:account:access,offline_access`. If you set them manually, only `cloudidentity:account:access` and `offline_access` are allowed.
 
 #### Console Login (login)
 
@@ -488,6 +539,9 @@ bp ecs DescribeInstances ---profile prod
 # Call an API with a specific profile and region override.
 bp ecs DescribeInstances ---profile prod ---region ap-southeast-1
 
+# Override only the region for this API call.
+bp ecs DescribeInstances ---region ap-southeast-1 --InstanceId "i-xxx"
+
 # `--` parameters are still sent to the API, while `---` parameters are consumed by the CLI.
 bp ecs DescribeInstances ---profile prod ---region ap-southeast-1 --InstanceIds '["i-xxx"]'
 ```
@@ -509,6 +563,25 @@ Support `--body` for application/json:
 
 ```shell
 bp rds_mysql ModifyDBInstanceIPList --body '{"InstanceId":"xxxxxx", "GroupName": "xxxxxx", "IPList": ["10.20.30.40", "50.60.70.80"]}'
+```
+
+Use different credential modes:
+
+```shell
+# Use ECS instance role credentials through an ecsrole profile.
+bp configure set --profile ecs-role --mode ecsrole --role-name MyRole --region ap-southeast-1
+bp ecs DescribeInstances ---profile ecs-role
+
+# Use OIDC credentials through an oidc profile.
+bp configure set --profile ci-oidc --mode oidc --region ap-southeast-1 \
+  --oidc-token-file /var/run/secrets/oidc-token --role-trn trn:iam::123456789012:role/CIRole
+bp ecs DescribeInstances ---profile ci-oidc
+
+# Use the default credential chain without an active profile.
+export BYTEPLUS_ACCESS_KEY=AK
+export BYTEPLUS_SECRET_KEY=SK
+export BYTEPLUS_REGION=ap-southeast-1
+bp ecs DescribeInstances
 ```
 
 ## Security and privacy
