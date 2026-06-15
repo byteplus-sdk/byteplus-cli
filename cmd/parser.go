@@ -117,7 +117,7 @@ func (p *Parser) currentFlagValueError(ctx *Context) error {
 
 func (p *Parser) parseArg(arg string, ctx *Context) (flag *Flag, value string, err error) {
 	if strings.HasPrefix(arg, "---") {
-		name := arg[3:]
+		name, inlineValue, hasInlineValue := splitFlagAssignment(arg[3:])
 		if name == "" {
 			err = fmt.Errorf("--- is not a valid flag")
 			return
@@ -127,15 +127,43 @@ func (p *Parser) parseArg(arg string, ctx *Context) (flag *Flag, value string, e
 			return
 		}
 		flag, err = ctx.fixedFlags.AddByName(name)
+		if err == nil && hasInlineValue {
+			if inlineValue == "" {
+				err = fmt.Errorf("---%s must set value. ", name)
+				return
+			}
+			flag.SetValue(inlineValue)
+			flag = nil
+		}
 	} else if strings.HasPrefix(arg, "--") {
 		if len(arg) == 2 {
 			err = fmt.Errorf("-- is not support command")
 		} else {
 			//可变参数放入动态参数集合中
-			flag, err = ctx.dynamicFlags.AddByName(arg[2:])
+			name, inlineValue, hasInlineValue := splitFlagAssignment(arg[2:])
+			if name == "" {
+				err = fmt.Errorf("-- is not support command")
+				return
+			}
+			flag, err = ctx.dynamicFlags.AddByName(name)
+			if err == nil && hasInlineValue {
+				if inlineValue == "" {
+					err = fmt.Errorf("--%s must set value. ", name)
+					return
+				}
+				flag.SetValue(inlineValue)
+				flag = nil
+			}
 		}
 	} else {
 		value = arg
 	}
+	return
+}
+
+// splitFlagAssignment 兼容 "--Flag value" 和 "--Flag=value" 两种写法。
+// 自定义 parser 不经过 pflag，必须显式拆分等号形式，避免脚本里的常见写法被当成参数名。
+func splitFlagAssignment(raw string) (name, value string, hasValue bool) {
+	name, value, hasValue = strings.Cut(raw, "=")
 	return
 }

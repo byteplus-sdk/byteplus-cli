@@ -132,7 +132,9 @@ jobs:
           public_base="${TOS_PUBLIC_BASE_URL:-https://byteplus-cli.tos-ap-southeast-1.bytepluses.com}"
           download_base="${public_base%/}/${prefix}"
           archive="byteplus-cli_${VERSION}_linux_amd64.zip"
+          checksum="byteplus-cli_${VERSION}_SHA256SUMS"
           curl --fail --location --head "${download_base}/v${VERSION}/${archive}"
+          curl --fail --location --head "${download_base}/v${VERSION}/${checksum}"
 
       - name: Test npm package
         working-directory: npm

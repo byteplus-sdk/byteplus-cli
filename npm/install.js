@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const { execFileSync } = require("child_process");
+const crypto = require("crypto");
 const https = require("https");
 const fs = require("fs");
 const path = require("path");
@@ -68,6 +69,53 @@ function archiveURLForTarget(target, version, downloadBaseURL) {
   return `${baseURL}/v${version}/${archiveNameForTarget(target, version)}`;
 }
 
+function checksumNameForVersion(version) {
+  return `byteplus-cli_${version}_SHA256SUMS`;
+}
+
+function checksumURLForVersion(version, downloadBaseURL) {
+  const baseURL = normalizeBaseURL(downloadBaseURL);
+  return `${baseURL}/v${version}/${checksumNameForVersion(version)}`;
+}
+
+function parseChecksumFile(content) {
+  const checksums = {};
+  String(content || "")
+    .split(/\r?\n/)
+    .forEach((rawLine) => {
+      const line = rawLine.trim();
+      if (!line) {
+        return;
+      }
+
+      const match = line.match(/^([a-fA-F0-9]{64})\s+\*?(.+)$/);
+      if (!match) {
+        return;
+      }
+
+      checksums[path.basename(match[2].trim())] = match[1].toLowerCase();
+    });
+  return checksums;
+}
+
+function sha256(data) {
+  return crypto.createHash("sha256").update(data).digest("hex");
+}
+
+function verifyChecksum(archiveName, data, checksumContent) {
+  const checksums = parseChecksumFile(checksumContent);
+  const expected = checksums[archiveName];
+
+  if (!expected) {
+    throw new Error(`Checksum for ${archiveName} not found in ${checksumNameForVersion(VERSION)}`);
+  }
+
+  const actual = sha256(data);
+  if (actual !== expected) {
+    throw new Error(`Checksum mismatch for ${archiveName}: expected ${expected}, got ${actual}`);
+  }
+}
+
 function createWindowsBpShim(binDir) {
   const shimPath = path.join(binDir, "bp");
   const shim = `#!/usr/bin/env node
@@ -96,6 +144,7 @@ function download(url) {
       https
         .get(currentURL, (res) => {
           if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+            res.resume();
             follow(new URL(res.headers.location, currentURL).toString());
             return;
           }
@@ -124,6 +173,7 @@ async function install() {
 
   const zipName = archiveNameForTarget(target, VERSION);
   const url = archiveURLForTarget(target, VERSION, DOWNLOAD_BASE_URL);
+  const checksumURL = checksumURLForVersion(VERSION, DOWNLOAD_BASE_URL);
   const binDir = path.join(__dirname, "bin");
   const isWindows = process.platform === "win32";
   const binaryName = binaryNameForPlatform(process.platform);
@@ -132,7 +182,10 @@ async function install() {
   fs.mkdirSync(binDir, { recursive: true });
   console.log(`Downloading ${zipName}...`);
 
-  const data = await download(url);
+  const [data, checksumData] = await Promise.all([download(url), download(checksumURL)]);
+  console.log(`Verifying ${zipName}...`);
+  verifyChecksum(zipName, data, checksumData.toString("utf8"));
+
   const tmpDir = path.join(__dirname, ".tmp");
   const zipPath = path.join(tmpDir, zipName);
 
@@ -197,8 +250,12 @@ module.exports = {
   archiveNameForTarget,
   archiveURLForTarget,
   binaryNameForPlatform,
+  checksumNameForVersion,
+  checksumURLForVersion,
   createWindowsBpShim,
   normalizeBaseURL,
+  parseChecksumFile,
   targetForPlatform,
+  verifyChecksum,
   version: VERSION,
 };

@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 const assert = require("assert");
+const crypto = require("crypto");
 const { spawnSync } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -10,9 +11,13 @@ const {
   archiveNameForTarget,
   archiveURLForTarget,
   binaryNameForPlatform,
+  checksumNameForVersion,
+  checksumURLForVersion,
   createWindowsBpShim,
   normalizeBaseURL,
+  parseChecksumFile,
   targetForPlatform,
+  verifyChecksum,
   version,
 } = require("./install");
 const pkg = require("./package.json");
@@ -61,6 +66,30 @@ assert.strictEqual(
     "https://bucket.example.com/releases///"
   ),
   "https://bucket.example.com/releases/v1.2.3/byteplus-cli_1.2.3_linux_amd64.zip"
+);
+assert.strictEqual(checksumNameForVersion("1.2.3"), "byteplus-cli_1.2.3_SHA256SUMS");
+assert.strictEqual(
+  checksumURLForVersion("1.2.3", "https://bucket.example.com/releases///"),
+  "https://bucket.example.com/releases/v1.2.3/byteplus-cli_1.2.3_SHA256SUMS"
+);
+
+const archiveName = archiveNameForTarget({ platform: "linux", arch: "amd64" }, version);
+const archiveData = Buffer.from("fake archive");
+const archiveHash = crypto.createHash("sha256").update(archiveData).digest("hex");
+const checksumContent = [
+  `${archiveHash}  ${archiveName}`,
+  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  byteplus-cli_extra.zip",
+  "",
+].join("\n");
+assert.deepStrictEqual(parseChecksumFile(checksumContent)[archiveName], archiveHash);
+assert.doesNotThrow(() => verifyChecksum(archiveName, archiveData, checksumContent));
+assert.throws(
+  () => verifyChecksum(archiveName, Buffer.from("tampered"), checksumContent),
+  /Checksum mismatch/
+);
+assert.throws(
+  () => verifyChecksum("missing.zip", archiveData, checksumContent),
+  /Checksum for missing\.zip not found/
 );
 
 withTempDir((dir) => {
