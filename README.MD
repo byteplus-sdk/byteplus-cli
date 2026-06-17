@@ -436,6 +436,31 @@ bp sts GetCallerIdentity ---profile dev ---region ap-southeast-1
 bp sts GetCallerIdentity ---region ap-southeast-1 ---endpoint sts.byteplusapi.com
 ```
 
+Supported fixed flags:
+
+- `---profile`: use a configured profile only for this invocation.
+- `---region`: override the region only for this invocation.
+- `---endpoint`: override the endpoint only for this invocation.
+- `---debug`: enable or disable CLI debug logs. Accepted boolean values include `true/false`, `1/0`, `yes/no`, and `on/off`.
+- `---debug-log-file`: append CLI debug logs to the specified file. When omitted, debug logs are written to stderr and no default log file is created.
+
+```shell
+# Print CLI debug logs to stderr. Normal API JSON output still goes to stdout.
+bp ecs DescribeInstances ---debug true
+
+# Append CLI debug logs to an explicit file.
+bp ecs DescribeInstances ---debug true ---debug-log-file ./bp-debug.log
+```
+
+You can also enable debug logs with environment variables:
+
+```shell
+BYTEPLUS_CLI_DEBUG=true bp ecs DescribeInstances
+BYTEPLUS_CLI_DEBUG=true BYTEPLUS_CLI_DEBUG_LOG_FILE=./bp-debug.log bp ecs DescribeInstances
+```
+
+Command-line flags take precedence over environment variables: `---debug` overrides `BYTEPLUS_CLI_DEBUG`, and `---debug-log-file` overrides `BYTEPLUS_CLI_DEBUG_LOG_FILE`. When debug is disabled, no logs are written and no log file is created.
+
 Example:
 
 ```shell
