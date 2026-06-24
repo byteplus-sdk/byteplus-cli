@@ -90,29 +90,18 @@ func TestParserRejectsUnsupportedFixedFlag(t *testing.T) {
 		t.Fatalf("ReadArgs() error = %q, want unsupported fixed flag message", err)
 	}
 }
-
-func TestParserAcceptsDebugFixedFlags(t *testing.T) {
+func TestParserRejectsDebugFixedFlags(t *testing.T) {
 	ctx := NewContext()
-	parser := NewParser([]string{
-		"---profile", "release",
-		"---region", "ap-southeast-1",
-		"---endpoint", "sts.byteplusapi.com",
-		"---debug", "true",
-		"---debug-log-file", "./bp-debug.log",
-	})
+	parser := NewParser([]string{"---debug", "true"})
 
 	_, err := parser.ReadArgs(ctx)
-	if err != nil {
-		t.Fatalf("ReadArgs() error = %v", err)
+	if err == nil {
+		t.Fatal("ReadArgs() error = nil, want unsupported debug fixed flag error")
 	}
-
-	for _, name := range []string{"profile", "region", "endpoint", "debug", "debug-log-file"} {
-		if ctx.fixedFlags.GetByName(name) == nil {
-			t.Fatalf("expected fixed flag %q to be accepted", name)
-		}
+	if !strings.Contains(err.Error(), "---debug is not supported") {
+		t.Fatalf("ReadArgs() error = %q, want unsupported debug fixed flag message", err)
 	}
 }
-
 func TestParserRequiresFixedFlagValue(t *testing.T) {
 	ctx := NewContext()
 	parser := NewParser([]string{"---region"})

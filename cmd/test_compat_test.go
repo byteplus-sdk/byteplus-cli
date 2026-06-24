@@ -40,3 +40,29 @@ func cleanupDirForTest(dir string) func() {
 		}
 	}
 }
+
+func unsetenvForTest(t *testing.T, key string) func() {
+	t.Helper()
+
+	oldValue, existed := os.LookupEnv(key)
+	if err := os.Unsetenv(key); err != nil {
+		t.Fatalf("unset env %s: %v", key, err)
+	}
+	return func() {
+		if existed {
+			_ = os.Setenv(key, oldValue)
+		} else {
+			_ = os.Unsetenv(key)
+		}
+	}
+}
+
+func withConfigDirForTest(dir string) func() {
+	oldFunc := configFileDirFunc
+	configFileDirFunc = func() (string, error) {
+		return dir, nil
+	}
+	return func() {
+		configFileDirFunc = oldFunc
+	}
+}
