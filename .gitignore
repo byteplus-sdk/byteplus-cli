@@ -6,3 +6,5 @@ doc
 byteplus-cli
 /bp
 /bp.exe
+/npm/checksum
+/node_modules

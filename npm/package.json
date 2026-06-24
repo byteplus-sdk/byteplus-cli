@@ -12,6 +12,7 @@
   },
   "files": [
     "bin/",
+    "checksum",
     "install.js"
   ],
   "keywords": [

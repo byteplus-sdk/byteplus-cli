@@ -3,7 +3,7 @@
 ### Overview
 
 1. Byteplus CLI Tool
-2. Minimum Go version required: 1.5+, recommended: 1.12+
+2. Go 1.12+ is recommended.
 
 ### Installing `bp`
 

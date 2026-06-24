@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const assert = require("assert");
-const crypto = require("crypto");
 const { spawnSync } = require("child_process");
 const fs = require("fs");
 const os = require("os");
@@ -11,13 +10,15 @@ const {
   archiveNameForTarget,
   archiveURLForTarget,
   binaryNameForPlatform,
-  checksumNameForVersion,
-  checksumURLForVersion,
+  checksumForArchive,
   createWindowsBpShim,
+  defaultDownloadBaseURL,
+  downloadErrorMessage,
   normalizeBaseURL,
-  parseChecksumFile,
+  parseChecksum,
+  sha256,
   targetForPlatform,
-  verifyChecksum,
+  verifyArchiveChecksum,
   version,
 } = require("./install");
 const pkg = require("./package.json");
@@ -38,6 +39,7 @@ assert.strictEqual(pkg.bin.bp, "bin/bp");
 assert.strictEqual(pkg.name, "@byteplus/cli");
 assert.strictEqual(version, pkg.version);
 assert.strictEqual(pkg.repository.url, "https://github.com/byteplus-sdk/byteplus-cli");
+assert.strictEqual(defaultDownloadBaseURL, "https://byteplus-cli.tos-ap-southeast-1.bytepluses.com/bp");
 assert.strictEqual(binaryNameForPlatform("win32"), "bp.exe");
 assert.strictEqual(binaryNameForPlatform("linux"), "bp");
 assert.strictEqual(binaryNameForPlatform("darwin"), "bp");
@@ -67,30 +69,57 @@ assert.strictEqual(
   ),
   "https://bucket.example.com/releases/v1.2.3/byteplus-cli_1.2.3_linux_amd64.zip"
 );
-assert.strictEqual(checksumNameForVersion("1.2.3"), "byteplus-cli_1.2.3_SHA256SUMS");
-assert.strictEqual(
-  checksumURLForVersion("1.2.3", "https://bucket.example.com/releases///"),
-  "https://bucket.example.com/releases/v1.2.3/byteplus-cli_1.2.3_SHA256SUMS"
+assert.match(
+  downloadErrorMessage(404, "https://example.com/missing.zip"),
+  /\nPlease download BytePlus CLI from the official releases page: https:\/\/github\.com\/byteplus-sdk\/byteplus-cli\/releases/
 );
 
-const archiveName = archiveNameForTarget({ platform: "linux", arch: "amd64" }, version);
-const archiveData = Buffer.from("fake archive");
-const archiveHash = crypto.createHash("sha256").update(archiveData).digest("hex");
-const checksumContent = [
-  `${archiveHash}  ${archiveName}`,
-  "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa  byteplus-cli_extra.zip",
-  "",
-].join("\n");
-assert.deepStrictEqual(parseChecksumFile(checksumContent)[archiveName], archiveHash);
-assert.doesNotThrow(() => verifyChecksum(archiveName, archiveData, checksumContent));
-assert.throws(
-  () => verifyChecksum(archiveName, Buffer.from("tampered"), checksumContent),
-  /Checksum mismatch/
+const checksumContent = `
+696221f4d866a9f194806057b234a9d1609aeaec347b4a6b315cbaa8592640eb  byteplus-cli_1.0.13_darwin_amd64.zip
+fe04ac6269206520c97197601e8174917e66eaea34ddafdbd1565e81de62e54a  ./byteplus-cli_1.0.13_darwin_arm64.zip
+`;
+const checksumEntries = parseChecksum(checksumContent);
+assert.strictEqual(checksumEntries.length, 2);
+assert.deepStrictEqual(checksumEntries[0], {
+  hash: "696221f4d866a9f194806057b234a9d1609aeaec347b4a6b315cbaa8592640eb",
+  filename: "byteplus-cli_1.0.13_darwin_amd64.zip",
+});
+assert.strictEqual(
+  checksumForArchive(checksumContent, "byteplus-cli_1.0.13_darwin_amd64.zip"),
+  "696221f4d866a9f194806057b234a9d1609aeaec347b4a6b315cbaa8592640eb"
+);
+assert.strictEqual(
+  checksumForArchive(checksumContent, "byteplus-cli_1.0.13_darwin_arm64.zip"),
+  "fe04ac6269206520c97197601e8174917e66eaea34ddafdbd1565e81de62e54a"
 );
 assert.throws(
-  () => verifyChecksum("missing.zip", archiveData, checksumContent),
-  /Checksum for missing\.zip not found/
+  () => parseChecksum("not-a-checksum  byteplus-cli_1.0.13_linux_amd64.zip"),
+  /Invalid checksum line 1/
 );
+assert.throws(
+  () => checksumForArchive(checksumContent, "byteplus-cli_1.0.13_linux_amd64.zip"),
+  /Checksum entry not found/
+);
+assert.strictEqual(
+  sha256(Buffer.from("abc")),
+  "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+);
+
+withTempDir((dir) => {
+  const checksumPath = path.join(dir, "checksum");
+  const archiveData = Buffer.from("archive-data");
+  const archiveName = "byteplus-cli_1.2.3_linux_amd64.zip";
+  const expected = sha256(archiveData);
+
+  fs.writeFileSync(checksumPath, `${expected}  ${archiveName}\n`);
+  assert.strictEqual(verifyArchiveChecksum(archiveData, archiveName, checksumPath), expected);
+
+  fs.writeFileSync(checksumPath, `${"0".repeat(64)}  ${archiveName}\n`);
+  assert.throws(
+    () => verifyArchiveChecksum(archiveData, archiveName, checksumPath),
+    /official releases page: https:\/\/github\.com\/byteplus-sdk\/byteplus-cli\/releases/
+  );
+});
 
 withTempDir((dir) => {
   const binDir = path.join(dir, "bin");

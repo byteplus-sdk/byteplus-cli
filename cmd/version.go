@@ -33,7 +33,7 @@ var clientVersionAndUserAgentHandler = request.NamedHandler{
 }
 
 const clientName = "byteplus-cli"
-const clientVersion = "1.0.15"
+var clientVersion = "1.0.15"
 
 type envGetter func(string) string
 
