@@ -49,9 +49,6 @@ func flatJSONKeySegments(apiMeta *ApiMeta, key string) []string {
 	if !strings.Contains(key, ".") {
 		return []string{key}
 	}
-	if apiMeta == nil || apiMeta.Request == nil {
-		return strings.Split(key, ".")
-	}
 	if _, _, ok := resolveRequestMetaType(apiMeta, key); !ok {
 		return []string{key}
 	}

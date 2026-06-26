@@ -17,7 +17,7 @@ func buildActionInput(flags []*Flag, apiMeta *ApiMeta, jsonBody bool) (interface
 	flat := make(map[string]string)
 
 	for _, f := range flags {
-		if jsonBody && f.Name == "body" {
+		if f.Name == "body" {
 			hasBody = true
 			bodyVal = f.value
 			continue
