@@ -511,6 +511,7 @@ func newConfigureSsoCmd() *cobra.Command {
 				profile = inputProfile
 			}
 
+			// Prompt for SSO session name with live fuzzy filtering and allow creating new.
 			var (
 				name            string
 				existingSession *SsoSession
@@ -553,6 +554,7 @@ func newConfigureSsoCmd() *cobra.Command {
 				NoBrowser:      noBrowser,
 			}
 
+			// 执行 SSO 授权流程并落盘 profile 配置。
 			if err := sso.SetProfile(); err != nil {
 				return err
 			}
@@ -578,6 +580,7 @@ func newConfigureSsoCmd() *cobra.Command {
 	return cmd
 }
 
+// readLineAllowEmpty 从标准输入读取一行，允许空输入并去除首尾空白。
 func readLineAllowEmpty() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	line, err := reader.ReadString('\n')
@@ -594,8 +597,12 @@ type sessionOption struct {
 
 var errSessionExists = errors.New("SSO session already exists")
 
+// promptSessionName 获取 SSO 会话名称：
+// - 若配置中无会话，直接提示输入并校验非空；
+// - 若已有会话，进入交互式选择/创建流程。
 func promptSessionName(cfg *Configure, defaultName string) (string, *SsoSession, error) {
 	if cfg == nil || len(cfg.SsoSession) == 0 {
+		// 没有任何已存在的会话时，直接使用简单输入流程。
 		fmt.Print("Please enter SSO session name:")
 		name, err := readLineAllowEmpty()
 		if err != nil {
@@ -617,6 +624,7 @@ func promptSessionName(cfg *Configure, defaultName string) (string, *SsoSession,
 	return selectedName, selectedSession, nil
 }
 
+// buildSessionOptions 将会话映射转换为稳定排序的选项列表，便于交互式展示。
 func buildSessionOptions(all map[string]*SsoSession) []sessionOption {
 	var keys []string
 	for name := range all {
@@ -635,6 +643,10 @@ func buildSessionOptions(all map[string]*SsoSession) []sessionOption {
 
 const addNewSessionLabel = "<Create new session>"
 
+// runSessionSelect 使用 promptui 提供交互式会话选择：
+// - 支持搜索过滤；
+// - 可选择“创建新会话”；
+// - 返回最终选中的会话名称与对象（新建时对象为 nil）。
 func runSessionSelect(cfg *Configure, options []sessionOption, defaultName string) (string, *SsoSession, error) {
 	choices := make([]sessionOption, 0, len(options)+1)
 	choices = append(choices, options...)
@@ -649,6 +661,7 @@ func runSessionSelect(cfg *Configure, options []sessionOption, defaultName strin
 		lastSearchInput = rawInput
 		lowerInput := strings.ToLower(rawInput)
 		item := choices[index]
+		// 始终展示“创建新会话”选项，方便直接新增。
 		if item.Name == addNewSessionLabel {
 			return true
 		}
@@ -692,6 +705,7 @@ Scopes: {{ sessionScopes .Session }}`,
 
 	chosen := choices[idx]
 	if chosen.Name == addNewSessionLabel {
+		// 新建会话名称：优先使用默认值，其次使用最近一次的搜索输入。
 		defaultNewName := strings.TrimSpace(defaultName)
 		if defaultNewName == "" {
 			defaultNewName = lastSearchInput
@@ -720,6 +734,8 @@ Scopes: {{ sessionScopes .Session }}`,
 	return chosen.Name, chosen.Session, nil
 }
 
+// buildPromptFuncMap 扩展 promptui 模板函数：
+// 用于渲染会话列表中的“是否新建/区域/URL/Scopes”等字段。
 func buildPromptFuncMap() template.FuncMap {
 	fm := template.FuncMap{}
 	for k, v := range promptui.FuncMap {
@@ -749,11 +765,14 @@ func buildPromptFuncMap() template.FuncMap {
 	return fm
 }
 
+// createSsoSessionInSso 在 SSO 会话不存在时创建新会话并写入配置文件。
+// 该流程采用交互式输入，完成 StartURL、Region 与 Scopes 的采集与校验。
 func createSsoSessionInSso(sessionName string, cfg *Configure) (*SsoSession, error) {
 	newSession := &SsoSession{
 		Name: sessionName,
 	}
 
+	// 依次采集必须字段：StartURL 必填，Region 支持默认值回填。
 	if err := promptForRequiredStringWithDefault(&newSession.StartURL, "Please enter SSO start URL:", "SSO start URL", ""); err != nil {
 		return nil, err
 	}
@@ -761,14 +780,17 @@ func createSsoSessionInSso(sessionName string, cfg *Configure) (*SsoSession, err
 		return nil, err
 	}
 
+	// 读取并规范化 scopes，保证值合法且无重复。
 	scopes, err := promptForRegistrationScopes(newSession.RegistrationScopes)
 	if err != nil {
 		return nil, err
 	}
 	newSession.RegistrationScopes = scopes
 
+	// 将新会话保存到内存配置。
 	cfg.SsoSession[sessionName] = newSession
 
+	// 写入配置文件，确保会话持久化。
 	if err := WriteConfigToFile(cfg); err != nil {
 		return nil, fmt.Errorf("failed to save SSO session configuration: %v", err)
 	}
