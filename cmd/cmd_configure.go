@@ -348,6 +348,7 @@ Examples:
 
 	cmd.SetUsageTemplate(configureActionUsageTemplate())
 
+	// 同时支持参数式输入，便于脚本化配置。
 	cmd.Flags().StringVar(&ssoSessionFlags.Name, "name", "", "SSO session name")
 	cmd.Flags().StringVar(&ssoSessionFlags.StartURL, "start-url", "", "SSO start URL")
 	cmd.Flags().StringVar(&ssoSessionFlags.Region, "region", "", "SSO region")
@@ -357,10 +358,13 @@ Examples:
 	return cmd
 }
 
+// promptForRequiredStringWithDefault 读取必填字符串；当已有默认值时支持回车沿用。
+// 该函数会循环提示直到得到非空值，避免后续逻辑处理空字段。
 func promptForRequiredStringWithDefault(target *string, prompt, fieldName, defaultValue string) error {
 	for {
 		if target == nil || strings.TrimSpace(*target) == "" {
 			if strings.TrimSpace(defaultValue) != "" {
+				// 有默认值时提示并允许直接回车使用默认值。
 				fmt.Printf("%s [%s]:", prompt, defaultValue)
 				line, err := readLineAllowEmpty()
 				if err != nil {
@@ -373,6 +377,7 @@ func promptForRequiredStringWithDefault(target *string, prompt, fieldName, defau
 					*target = line
 				}
 			} else {
+				// 无默认值时必须输入。
 				fmt.Printf("%s", prompt)
 				line, err := readLineAllowEmpty()
 				if err != nil {
@@ -385,11 +390,14 @@ func promptForRequiredStringWithDefault(target *string, prompt, fieldName, defau
 		if *target != "" {
 			return nil
 		}
+		// 兜底提示：空值会被拒绝并重新输入。
 		fmt.Printf("%s cannot be empty\n", fieldName)
 		*target = ""
 	}
 }
 
+// promptForRegistrationScopes 交互式读取 registration scopes，并做统一规范化处理。
+// 当未提供任何值时会提示用户输入，最终返回去重且校验通过的 scope 列表。
 func promptForRegistrationScopes(current []string) ([]string, error) {
 	if len(current) == 0 {
 		fmt.Printf("Please enter SSO registration scopes (comma-separated, allowed: %s) [%s]:", strings.Join(allowedRegistrationScopes, ", "), strings.Join(defaultRegistrationScopes, ","))
@@ -403,6 +411,8 @@ func promptForRegistrationScopes(current []string) ([]string, error) {
 	return normalizeRegistrationScopes(current)
 }
 
+// promptForRegistrationScopesWithDefault 支持带默认值的 scopes 输入。
+// showDefault 为 true 时会展示默认值标签，否则仅在已有值时展示。
 func promptForRegistrationScopesWithDefault(current []string, showDefault bool) ([]string, error) {
 	defaultValue := strings.Join(current, ",")
 	label := ""
@@ -426,6 +436,10 @@ func promptForRegistrationScopesWithDefault(current []string, showDefault bool) 
 	return normalizeRegistrationScopes(current)
 }
 
+// normalizeRegistrationScopes 对输入的 scopes 做清洗、校验与去重。
+// - 空输入：返回默认 scopes
+// - 非法值：返回错误
+// - 重复值：去重保留首次出现的顺序
 func normalizeRegistrationScopes(scopes []string) ([]string, error) {
 	if len(scopes) == 0 {
 		return append([]string(nil), defaultRegistrationScopes...), nil
