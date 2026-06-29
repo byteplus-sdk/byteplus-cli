@@ -36,6 +36,7 @@ var (
 	configFileDirFunc = util.GetConfigFileDir
 )
 
+// 定义模式枚举常量
 const (
 	ModeSSO          = "sso"
 	ModeAK           = "ak"
@@ -251,6 +252,7 @@ func setConfigProfile(profile *Profile) error {
 
 	cfg.Profiles[nextProfile.Name] = nextProfile
 	cfg.Current = nextProfile.Name
+	// 写入配置文件，完成持久化。
 	return WriteConfigToFile(cfg)
 }
 
@@ -321,6 +323,7 @@ func mergeProfile(base *Profile, input *Profile) *Profile {
 	if input.Mode != "" {
 		merged.Mode = input.Mode
 	}
+	// 仅新建 profile 时默认 mode 为 ak，修改已有 profile 时保留原 mode
 	if base == nil && merged.Mode == "" {
 		merged.Mode = ModeAK
 	}
@@ -417,6 +420,7 @@ func deleteConfigProfile(profileName string) error {
 		fmt.Printf("delete current profile, set new current profile to [%v]\n", cfg.Current)
 	}
 
+	// 写入配置文件，完成持久化。
 	return WriteConfigToFile(cfg)
 }
 
@@ -443,6 +447,7 @@ func changeConfigProfile(profileName string) error {
 
 	// change current
 	cfg.Current = profileName
+	// 写入配置文件，完成持久化。
 	return WriteConfigToFile(cfg)
 }
 
@@ -459,6 +464,8 @@ func (p *Profile) String() string {
 	return string(b)
 }
 
+// setSsoSession 保存/更新 SSO 会话配置。
+// 该函数会规范化 scopes，初始化配置结构，并将会话写入配置文件。
 func setSsoSession(session *SsoSession) error {
 	var (
 		cfg *Configure
@@ -468,6 +475,7 @@ func setSsoSession(session *SsoSession) error {
 		return err
 	}
 
+	// 若配置为空则初始化基础结构。
 	if cfg = ctx.config; cfg == nil {
 		cfg = &Configure{
 			Profiles:   make(map[string]*Profile),
@@ -475,10 +483,12 @@ func setSsoSession(session *SsoSession) error {
 		}
 	}
 
+	// 确保 SsoSession 映射已初始化。
 	if cfg.SsoSession == nil {
 		cfg.SsoSession = make(map[string]*SsoSession)
 	}
 
+	// 构建新会话对象，使用规范化后的 scopes。
 	newSession := &SsoSession{
 		Name:               session.Name,
 		StartURL:           session.StartURL,
@@ -486,7 +496,9 @@ func setSsoSession(session *SsoSession) error {
 		RegistrationScopes: scopes,
 	}
 
+	// 写入内存配置并提示成功。
 	cfg.SsoSession[session.Name] = newSession
 
+	// 写入配置文件，完成持久化。
 	return WriteConfigToFile(cfg)
 }
