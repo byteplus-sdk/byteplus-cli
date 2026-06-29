@@ -28,6 +28,7 @@ import (
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/client"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/client/metadata"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/credentials"
+	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/defaults"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/request"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/session"
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/signer/byteplussign"
@@ -49,6 +50,7 @@ type SdkClientInfo struct {
 
 func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	var (
+		clientCreds                                              *credentials.Credentials
 		ak, sk, sessionToken, region, endpoint, endpointResolver string
 		httpProxy, httpsProxy                                    string
 		disableSSl, useDualStack                                 bool
@@ -152,14 +154,14 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		}
 	}
 
-	// if cannot get from config file, try to get from export variable
 	if currentProfile == nil {
-		ak = os.Getenv("BYTEPLUS_ACCESS_KEY")
-		sk = os.Getenv("BYTEPLUS_SECRET_KEY")
+		if os.Getenv("BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS") == "true" {
+			return nil, fmt.Errorf("no profile configured and default credential chain is disabled (BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS=true)")
+		}
+		clientCreds = defaults.NewDefaultCredentialProvider()
 		region = os.Getenv("BYTEPLUS_REGION")
 		endpoint = os.Getenv("BYTEPLUS_ENDPOINT")
 		endpointResolver = os.Getenv("BYTEPLUS_ENDPOINT_RESOLVER")
-		sessionToken = os.Getenv("BYTEPLUS_SESSION_TOKEN")
 		ssl := os.Getenv("BYTEPLUS_DISABLE_SSL")
 		if ssl == "true" || ssl == "false" {
 			disableSSl, _ = strconv.ParseBool(ssl)
@@ -167,13 +169,6 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		dualStack := os.Getenv("BYTEPLUS_USE_DUALSTACK")
 		if dualStack == "true" || dualStack == "false" {
 			useDualStack, _ = strconv.ParseBool(dualStack)
-		}
-
-		if ak == "" {
-			return nil, fmt.Errorf("BYTEPLUS_ACCESS_KEY not set")
-		}
-		if sk == "" {
-			return nil, fmt.Errorf("BYTEPLUS_SECRET_KEY not set")
 		}
 	}
 
@@ -190,9 +185,13 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		return nil, fmt.Errorf("region not set, please set it via profile, ---region flag, or BYTEPLUS_REGION environment variable")
 	}
 
+	if clientCreds == nil {
+		clientCreds = credentials.NewStaticCredentials(ak, sk, sessionToken)
+	}
+
 	config := byteplus.NewConfig().
 		WithRegion(region).
-		WithCredentials(credentials.NewStaticCredentials(ak, sk, sessionToken)).
+		WithCredentials(clientCreds).
 		WithDisableSSL(disableSSl)
 
 	resolverValue := strings.ToLower(strings.TrimSpace(endpointResolver))

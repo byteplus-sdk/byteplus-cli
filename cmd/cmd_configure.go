@@ -100,7 +100,14 @@ func newConfigureSetCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "set",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return setConfigProfile(&profileFlags)
+			input := profileFlags
+			if !cmd.Flags().Changed("disable-ssl") {
+				input.DisableSSL = nil
+			}
+			if !cmd.Flags().Changed("use-dual-stack") {
+				input.UseDualStack = nil
+			}
+			return setConfigProfile(&input)
 		},
 		Short: "add new profile, or modify target profile",
 		Long: `Description:
@@ -108,7 +115,7 @@ func newConfigureSetCmd() *cobra.Command {
       1. if profile not exist, add new;
       2. if profile exist, modify target field
 
-  supported modes: ak, sso, console-login
+  supported modes: ak, sso, console-login, ramrolearn, oidc, ecsrole
 
 Examples:
   bp configure set --profile test --region ap-southeast-1 --access-key ak --secret-key sk`,
@@ -118,7 +125,7 @@ Examples:
 	cmd.SetUsageTemplate(configureActionUsageTemplate())
 
 	cmd.Flags().StringVar(&profileFlags.Name, "profile", "", "target profile name")
-	cmd.Flags().StringVar(&profileFlags.Mode, "mode", "", "credential mode (ak, sso, console-login)")
+	cmd.Flags().StringVar(&profileFlags.Mode, "mode", "", "credential mode (ak, sso, console-login, ramrolearn, oidc, ecsrole)")
 	cmd.Flags().StringVar(&profileFlags.AccessKey, "access-key", "", "your access key(AK)")
 	cmd.Flags().StringVar(&profileFlags.SecretKey, "secret-key", "", "your secret key(SK)")
 	cmd.Flags().StringVar(&profileFlags.Region, "region", "", "your region")
@@ -128,6 +135,10 @@ Examples:
 	cmd.Flags().StringVar(&profileFlags.HTTPSProxy, "https-proxy", "", "HTTPS proxy URL used by the SDK")
 	cmd.Flags().StringVar(&profileFlags.SessionToken, "session-token", "", "your session token")
 	cmd.Flags().StringVar(&profileFlags.SsoSessionName, "sso-session", "", "your sso session name")
+	cmd.Flags().StringVar(&profileFlags.AccountId, "account-id", "", "your account id (required for ramrolearn mode)")
+	cmd.Flags().StringVar(&profileFlags.RoleName, "role-name", "", "your role name (required for ramrolearn/ecsrole mode)")
+	cmd.Flags().StringVar(&profileFlags.OidcTokenFile, "oidc-token-file", "", "path to OIDC token file (required for oidc mode)")
+	cmd.Flags().StringVar(&profileFlags.RoleTrn, "role-trn", "", "role TRN (required for oidc mode)")
 
 	profileFlags.DisableSSL = cmd.Flags().Bool("disable-ssl", false, "disable ssl")
 	profileFlags.UseDualStack = cmd.Flags().Bool("use-dual-stack", false, "use dual-stack endpoints")
@@ -136,6 +147,51 @@ Examples:
 	cmd.MarkFlagRequired("profile")
 
 	return cmd
+}
+
+func validateProfileMode(profile *Profile) error {
+	mode := strings.ToLower(strings.TrimSpace(profile.Mode))
+	switch mode {
+	case "", ModeAK:
+		if profile.AccessKey == "" {
+			return fmt.Errorf("mode %q requires --access-key", ModeAK)
+		}
+		if profile.SecretKey == "" {
+			return fmt.Errorf("mode %q requires --secret-key", ModeAK)
+		}
+	case ModeSSO:
+	case ModeConsoleLogin:
+		if profile.LoginSession == "" {
+			return fmt.Errorf("mode %q requires login-session; run 'bp login' first", ModeConsoleLogin)
+		}
+	case ModeRamRoleArn:
+		if profile.AccessKey == "" {
+			return fmt.Errorf("mode %q requires --access-key", ModeRamRoleArn)
+		}
+		if profile.SecretKey == "" {
+			return fmt.Errorf("mode %q requires --secret-key", ModeRamRoleArn)
+		}
+		if profile.RoleName == "" {
+			return fmt.Errorf("mode %q requires --role-name", ModeRamRoleArn)
+		}
+		if profile.AccountId == "" {
+			return fmt.Errorf("mode %q requires --account-id", ModeRamRoleArn)
+		}
+	case ModeOIDC:
+		if profile.OidcTokenFile == "" {
+			return fmt.Errorf("mode %q requires --oidc-token-file", ModeOIDC)
+		}
+		if profile.RoleTrn == "" {
+			return fmt.Errorf("mode %q requires --role-trn", ModeOIDC)
+		}
+	case ModeEcsRole:
+		if profile.RoleName == "" {
+			return fmt.Errorf("mode %q requires --role-name", ModeEcsRole)
+		}
+	default:
+		return fmt.Errorf("unsupported mode %q, supported modes: ak, sso, console-login, ramrolearn, oidc, ecsrole", mode)
+	}
+	return nil
 }
 
 func newConfigureListCmd() *cobra.Command {
