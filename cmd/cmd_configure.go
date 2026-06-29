@@ -118,7 +118,10 @@ func newConfigureSetCmd() *cobra.Command {
   supported modes: ak, sso, console-login, ramrolearn, oidc, ecsrole
 
 Examples:
-  bp configure set --profile test --region ap-southeast-1 --access-key ak --secret-key sk`,
+  bp configure set --profile test --region ap-southeast-1 --access-key ak --secret-key sk
+  bp configure set --profile test-ram --mode ramrolearn --region ap-southeast-1 --access-key ak --secret-key sk --role-name YourRoleName --account-id 2100000000
+  bp configure set --profile test-oidc --mode oidc --region ap-southeast-1 --oidc-token-file /path/to/oidc/token --role-trn trn:iam::2100000000:role/YourRoleName
+  bp configure set --profile test-ecs --mode ecsrole --region ap-southeast-1 --role-name YourEcsRoleName`,
 		DisableFlagsInUseLine: true,
 	}
 
