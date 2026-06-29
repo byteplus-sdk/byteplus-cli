@@ -270,6 +270,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "sso-session",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// 初始化配置对象与会话映射，保证后续读写安全。
 			cfg := ctx.config
 			if cfg == nil {
 				cfg = &Configure{
@@ -295,6 +296,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 				existingSession = cfg.SsoSession[ssoSessionFlags.Name]
 			}
 
+			// 以已有会话作为默认值，降低重复输入成本。
 			defaultStartURL := ""
 			defaultRegion := defaultSsoRegion
 			defaultScopes := []string(nil)
@@ -304,6 +306,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 				defaultScopes = existingSession.RegistrationScopes
 			}
 
+			// 依次采集必须字段：StartURL 与 Region 支持默认值回填。
 			if err := promptForRequiredStringWithDefault(&ssoSessionFlags.StartURL, "Please enter SSO Start URL:", "SSO Start URL", defaultStartURL); err != nil {
 				return err
 			}
@@ -311,6 +314,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 				return err
 			}
 
+			// 采集并规范化 scopes：支持参数输入或交互式输入，并去重校验。
 			var scopes []string
 			var err error
 			if len(ssoSessionFlags.RegistrationScopes) == 0 {
@@ -324,6 +328,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 			}
 			ssoSessionFlags.RegistrationScopes = scopes
 
+			// 将 SSO 会话落盘到配置文件。
 			if err := setSsoSession(&ssoSessionFlags); err != nil {
 				return err
 			}
