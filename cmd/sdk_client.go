@@ -223,6 +223,27 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	}, nil
 }
 
+// hasLocalCredentialSignal reports whether any local credential signal exists
+// for the SDK default credential chain (Env → OIDC → CliProvider → EcsRole).
+func hasLocalCredentialSignal() bool {
+	if os.Getenv("BYTEPLUS_ACCESS_KEY") != "" || os.Getenv("BYTEPLUS_ACCESS_KEY_ID") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_OIDC_TOKEN_FILE") != "" || os.Getenv("BYTEPLUS_OIDC_ROLE_TRN") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_PROFILE") != "" || os.Getenv("BYTEPLUS_CLI_PROFILE") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_ECS_METADATA") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_CONTAINER_CREDENTIALS_FULL_URI") != "" {
+		return true
+	}
+	return false
+}
+
 func defaultProfileName(cfg *Configure) string {
 	name, _ := defaultProfileNameWithSource(cfg)
 	return name
@@ -238,7 +259,7 @@ func defaultProfileNameWithSource(cfg *Configure) (string, string) {
 	if profile := os.Getenv("BYTEPLUS_CLI_PROFILE"); profile != "" {
 		return profile, "env:BYTEPLUS_CLI_PROFILE"
 	}
-	return "", "env:BYTEPLUS_*"
+	return "", "default-chain"
 }
 
 type debugClientConfig struct {
@@ -256,9 +277,8 @@ type debugClientConfig struct {
 
 func debugCredentialMode(profile *Profile) string {
 	if profile == nil {
-		return "env"
+		return "default-chain"
 	}
-
 	mode := strings.ToLower(strings.TrimSpace(profile.Mode))
 	if mode == "" {
 		return ModeAK
