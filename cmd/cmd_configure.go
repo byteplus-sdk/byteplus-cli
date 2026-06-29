@@ -465,10 +465,13 @@ func normalizeRegistrationScopes(scopes []string) ([]string, error) {
 	return normalized, nil
 }
 
+// newConfigureSsoCmd 构建 `configure sso` 子命令。
+// 该命令会关联 SSO 会话，执行 SSO 授权流程并最终写入 SSO 类型的 profile 配置。
 func newConfigureSsoCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "sso",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// 加载并初始化配置，保证 profiles 与 sso-session 映射存在。
 			cfg := ctx.config
 			if cfg == nil {
 				cfg = &Configure{
@@ -484,11 +487,13 @@ func newConfigureSsoCmd() *cobra.Command {
 				cfg.SsoSession = make(map[string]*SsoSession)
 			}
 
+			// 读取 CLI 标志位，控制设备码流程与浏览器自动打开行为。
 			noBrowser, err := cmd.Flags().GetBool("no-browser")
 			if err != nil {
 				return err
 			}
 
+			// 读取 profile 名称：未输入时允许回车留空，稍后由 SSO 信息回填默认值。
 			if strings.TrimSpace(ssoFlags.Name) == "" {
 				fmt.Print("Enter profile name (press Enter to use default: {sso-role-name}-{sso-account-id}): ")
 				line, err := readLineAllowEmpty()
@@ -511,6 +516,7 @@ func newConfigureSsoCmd() *cobra.Command {
 				existingSession *SsoSession
 			)
 			if ssoFlags.SsoSessionName == "" {
+				// 交互式选择或创建会话；会话名不可重复。
 				for {
 					name, existingSession, err = promptSessionName(cfg, ssoFlags.SsoSessionName)
 					if err == nil {
@@ -529,19 +535,21 @@ func newConfigureSsoCmd() *cobra.Command {
 
 			ssoSession := existingSession
 			if ssoSession == nil {
+				// 若会话不存在则引导创建，并写入配置文件。
 				ssoSession, err = createSsoSessionInSso(ssoFlags.SsoSessionName, cfg)
 				if err != nil {
 					return err
 				}
 			}
 
+			// 构建 SSO 服务实例，组装所需的会话与运行参数。
 			var sso SSOService = &Sso{
 				Profile:        profile,
 				SsoSessionName: ssoFlags.SsoSessionName,
 				StartURL:       ssoSession.StartURL,
 				Region:         ssoSession.Region,
 				Scopes:         ssoSession.RegistrationScopes,
-				UseDeviceCode:  true,
+				UseDeviceCode:  true, // 目前仅支持设备码登录流程。
 				NoBrowser:      noBrowser,
 			}
 
