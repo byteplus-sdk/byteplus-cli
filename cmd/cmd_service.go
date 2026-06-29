@@ -65,6 +65,11 @@ func generateServiceCommands() {
 	}
 }
 
+// runServiceCmd handles invocation of a service command. Because the command
+// uses DisableFlagParsing, cobra only reaches here when no valid action
+// subcommand matched. We resolve the intended action from the raw args and
+// surface a clear "unsupported action" error instead of cobra's flag-parsing
+// error, even when fixed flags such as ---region are present.
 func runServiceCmd(cmd *cobra.Command, svc string, validActions []string, args []string) error {
 	for _, a := range args {
 		if a == "-h" || a == "--help" {
