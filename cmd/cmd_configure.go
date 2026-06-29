@@ -152,6 +152,7 @@ Examples:
 	return cmd
 }
 
+// validateProfileMode 校验 profile 的 mode 及其必填参数
 func validateProfileMode(profile *Profile) error {
 	mode := strings.ToLower(strings.TrimSpace(profile.Mode))
 	switch mode {
@@ -163,6 +164,7 @@ func validateProfileMode(profile *Profile) error {
 			return fmt.Errorf("mode %q requires --secret-key", ModeAK)
 		}
 	case ModeSSO:
+		// sso 模式通过 configure sso 子命令配置，此处不额外校验
 	case ModeConsoleLogin:
 		if profile.LoginSession == "" {
 			return fmt.Errorf("mode %q requires login-session; run 'bp login' first", ModeConsoleLogin)
@@ -262,6 +264,8 @@ func newConfigureProfileCmd() *cobra.Command {
 	return cmd
 }
 
+// newConfigureSsoSessionCmd 构建 `configure sso-session` 子命令。
+// 该命令负责新增或更新 SSO 会话：支持交互式输入、基于已有会话的默认值回填，并统一做参数校验与规范化。
 func newConfigureSsoSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "sso-session",
