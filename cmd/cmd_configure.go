@@ -61,8 +61,9 @@ func init() {
 
 func newConfigureRootCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:  "configure",
-		Args: cobra.MatchAll(cobra.OnlyValidArgs),
+		Use:   "configure",
+		Short: "Manage CLI profiles and credentials",
+		Args:  cobra.MatchAll(cobra.OnlyValidArgs),
 		Run: func(cmd *cobra.Command, args []string) {
 			cmd.Usage()
 		},
@@ -100,8 +101,6 @@ func newConfigureSetCmd() *cobra.Command {
 		Use: "set",
 		RunE: func(cmd *cobra.Command, args []string) error {
 			input := profileFlags
-			// pflag 的 bool flag 默认总会持有 false 指针；未显式传入时置 nil，
-			// 这样 mergeProfile 才能区分“保留旧值”和“用户明确设置 false”。
 			if !cmd.Flags().Changed("disable-ssl") {
 				input.DisableSSL = nil
 			}
@@ -116,7 +115,13 @@ func newConfigureSetCmd() *cobra.Command {
       1. if profile not exist, add new;
       2. if profile exist, modify target field
 
-  supported modes: ak, sso, console-login, ramrolearn, oidc, ecsrole`,
+  supported modes: ak, sso, console-login, ramrolearn, oidc, ecsrole
+
+Examples:
+  bp configure set --profile test --region ap-southeast-1 --access-key ak --secret-key sk
+  bp configure set --profile test-ram --mode ramrolearn --region ap-southeast-1 --access-key ak --secret-key sk --role-name YourRoleName --account-id 2100000000
+  bp configure set --profile test-oidc --mode oidc --region ap-southeast-1 --oidc-token-file /path/to/oidc/token --role-trn trn:iam::2100000000:role/YourRoleName
+  bp configure set --profile test-ecs --mode ecsrole --region ap-southeast-1 --role-name YourEcsRoleName`,
 		DisableFlagsInUseLine: true,
 	}
 
@@ -129,6 +134,8 @@ func newConfigureSetCmd() *cobra.Command {
 	cmd.Flags().StringVar(&profileFlags.Region, "region", "", "your region")
 	cmd.Flags().StringVar(&profileFlags.Endpoint, "endpoint", "", "endpoint bind with region")
 	cmd.Flags().StringVar(&profileFlags.EndpointResolver, "endpoint-resolver", "", "endpoint resolver (auto-addressing)")
+	cmd.Flags().StringVar(&profileFlags.HTTPProxy, "http-proxy", "", "HTTP proxy URL used by the SDK when SSL is disabled")
+	cmd.Flags().StringVar(&profileFlags.HTTPSProxy, "https-proxy", "", "HTTPS proxy URL used by the SDK")
 	cmd.Flags().StringVar(&profileFlags.SessionToken, "session-token", "", "your session token")
 	cmd.Flags().StringVar(&profileFlags.SsoSessionName, "sso-session", "", "your sso session name")
 	cmd.Flags().StringVar(&profileFlags.AccountId, "account-id", "", "your account id (required for ramrolearn mode)")
@@ -145,7 +152,7 @@ func newConfigureSetCmd() *cobra.Command {
 	return cmd
 }
 
-// validateProfileMode 校验 profile mode 与必填字段，避免写入 SDK provider 无法解析的配置。
+// validateProfileMode 校验 profile 的 mode 及其必填参数
 func validateProfileMode(profile *Profile) error {
 	mode := strings.ToLower(strings.TrimSpace(profile.Mode))
 	switch mode {
@@ -157,7 +164,7 @@ func validateProfileMode(profile *Profile) error {
 			return fmt.Errorf("mode %q requires --secret-key", ModeAK)
 		}
 	case ModeSSO:
-		// SSO profile 由 configure sso 创建并补齐 account/role/session 信息。
+		// sso 模式通过 configure sso 子命令配置，此处不额外校验
 	case ModeConsoleLogin:
 		if profile.LoginSession == "" {
 			return fmt.Errorf("mode %q requires login-session; run 'bp login' first", ModeConsoleLogin)
@@ -257,10 +264,13 @@ func newConfigureProfileCmd() *cobra.Command {
 	return cmd
 }
 
+// newConfigureSsoSessionCmd 构建 `configure sso-session` 子命令。
+// 该命令负责新增或更新 SSO 会话：支持交互式输入、基于已有会话的默认值回填，并统一做参数校验与规范化。
 func newConfigureSsoSessionCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "sso-session",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// 初始化配置对象与会话映射，保证后续读写安全。
 			cfg := ctx.config
 			if cfg == nil {
 				cfg = &Configure{
@@ -286,6 +296,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 				existingSession = cfg.SsoSession[ssoSessionFlags.Name]
 			}
 
+			// 以已有会话作为默认值，降低重复输入成本。
 			defaultStartURL := ""
 			defaultRegion := defaultSsoRegion
 			defaultScopes := []string(nil)
@@ -295,6 +306,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 				defaultScopes = existingSession.RegistrationScopes
 			}
 
+			// 依次采集必须字段：StartURL 与 Region 支持默认值回填。
 			if err := promptForRequiredStringWithDefault(&ssoSessionFlags.StartURL, "Please enter SSO Start URL:", "SSO Start URL", defaultStartURL); err != nil {
 				return err
 			}
@@ -302,6 +314,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 				return err
 			}
 
+			// 采集并规范化 scopes：支持参数输入或交互式输入，并去重校验。
 			var scopes []string
 			var err error
 			if len(ssoSessionFlags.RegistrationScopes) == 0 {
@@ -315,6 +328,7 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 			}
 			ssoSessionFlags.RegistrationScopes = scopes
 
+			// 将 SSO 会话落盘到配置文件。
 			if err := setSsoSession(&ssoSessionFlags); err != nil {
 				return err
 			}
@@ -325,12 +339,16 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 		Long: `Description:
   add new SSO session, or modify target SSO session:
       1. if SSO session not exist, add new;
-      2. if SSO session exist, modify target field`,
+      2. if SSO session exist, modify target field
+
+Examples:
+  bp configure sso-session --name my-sso --start-url https://{custom}.byteplusidentity.com/userportal --region ap-southeast-1`,
 		DisableFlagsInUseLine: true,
 	}
 
 	cmd.SetUsageTemplate(configureActionUsageTemplate())
 
+	// 同时支持参数式输入，便于脚本化配置。
 	cmd.Flags().StringVar(&ssoSessionFlags.Name, "name", "", "SSO session name")
 	cmd.Flags().StringVar(&ssoSessionFlags.StartURL, "start-url", "", "SSO start URL")
 	cmd.Flags().StringVar(&ssoSessionFlags.Region, "region", "", "SSO region")
@@ -340,10 +358,13 @@ func newConfigureSsoSessionCmd() *cobra.Command {
 	return cmd
 }
 
+// promptForRequiredStringWithDefault 读取必填字符串；当已有默认值时支持回车沿用。
+// 该函数会循环提示直到得到非空值，避免后续逻辑处理空字段。
 func promptForRequiredStringWithDefault(target *string, prompt, fieldName, defaultValue string) error {
 	for {
 		if target == nil || strings.TrimSpace(*target) == "" {
 			if strings.TrimSpace(defaultValue) != "" {
+				// 有默认值时提示并允许直接回车使用默认值。
 				fmt.Printf("%s [%s]:", prompt, defaultValue)
 				line, err := readLineAllowEmpty()
 				if err != nil {
@@ -356,6 +377,7 @@ func promptForRequiredStringWithDefault(target *string, prompt, fieldName, defau
 					*target = line
 				}
 			} else {
+				// 无默认值时必须输入。
 				fmt.Printf("%s", prompt)
 				line, err := readLineAllowEmpty()
 				if err != nil {
@@ -368,11 +390,14 @@ func promptForRequiredStringWithDefault(target *string, prompt, fieldName, defau
 		if *target != "" {
 			return nil
 		}
+		// 兜底提示：空值会被拒绝并重新输入。
 		fmt.Printf("%s cannot be empty\n", fieldName)
 		*target = ""
 	}
 }
 
+// promptForRegistrationScopes 交互式读取 registration scopes，并做统一规范化处理。
+// 当未提供任何值时会提示用户输入，最终返回去重且校验通过的 scope 列表。
 func promptForRegistrationScopes(current []string) ([]string, error) {
 	if len(current) == 0 {
 		fmt.Printf("Please enter SSO registration scopes (comma-separated, allowed: %s) [%s]:", strings.Join(allowedRegistrationScopes, ", "), strings.Join(defaultRegistrationScopes, ","))
@@ -386,6 +411,8 @@ func promptForRegistrationScopes(current []string) ([]string, error) {
 	return normalizeRegistrationScopes(current)
 }
 
+// promptForRegistrationScopesWithDefault 支持带默认值的 scopes 输入。
+// showDefault 为 true 时会展示默认值标签，否则仅在已有值时展示。
 func promptForRegistrationScopesWithDefault(current []string, showDefault bool) ([]string, error) {
 	defaultValue := strings.Join(current, ",")
 	label := ""
@@ -409,6 +436,10 @@ func promptForRegistrationScopesWithDefault(current []string, showDefault bool) 
 	return normalizeRegistrationScopes(current)
 }
 
+// normalizeRegistrationScopes 对输入的 scopes 做清洗、校验与去重。
+// - 空输入：返回默认 scopes
+// - 非法值：返回错误
+// - 重复值：去重保留首次出现的顺序
 func normalizeRegistrationScopes(scopes []string) ([]string, error) {
 	if len(scopes) == 0 {
 		return append([]string(nil), defaultRegistrationScopes...), nil
@@ -434,10 +465,13 @@ func normalizeRegistrationScopes(scopes []string) ([]string, error) {
 	return normalized, nil
 }
 
+// newConfigureSsoCmd 构建 `configure sso` 子命令。
+// 该命令会关联 SSO 会话，执行 SSO 授权流程并最终写入 SSO 类型的 profile 配置。
 func newConfigureSsoCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use: "sso",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			// 加载并初始化配置，保证 profiles 与 sso-session 映射存在。
 			cfg := ctx.config
 			if cfg == nil {
 				cfg = &Configure{
@@ -453,11 +487,13 @@ func newConfigureSsoCmd() *cobra.Command {
 				cfg.SsoSession = make(map[string]*SsoSession)
 			}
 
+			// 读取 CLI 标志位，控制设备码流程与浏览器自动打开行为。
 			noBrowser, err := cmd.Flags().GetBool("no-browser")
 			if err != nil {
 				return err
 			}
 
+			// 读取 profile 名称：未输入时允许回车留空，稍后由 SSO 信息回填默认值。
 			if strings.TrimSpace(ssoFlags.Name) == "" {
 				fmt.Print("Enter profile name (press Enter to use default: {sso-role-name}-{sso-account-id}): ")
 				line, err := readLineAllowEmpty()
@@ -475,11 +511,13 @@ func newConfigureSsoCmd() *cobra.Command {
 				profile = inputProfile
 			}
 
+			// Prompt for SSO session name with live fuzzy filtering and allow creating new.
 			var (
 				name            string
 				existingSession *SsoSession
 			)
 			if ssoFlags.SsoSessionName == "" {
+				// 交互式选择或创建会话；会话名不可重复。
 				for {
 					name, existingSession, err = promptSessionName(cfg, ssoFlags.SsoSessionName)
 					if err == nil {
@@ -498,22 +536,25 @@ func newConfigureSsoCmd() *cobra.Command {
 
 			ssoSession := existingSession
 			if ssoSession == nil {
+				// 若会话不存在则引导创建，并写入配置文件。
 				ssoSession, err = createSsoSessionInSso(ssoFlags.SsoSessionName, cfg)
 				if err != nil {
 					return err
 				}
 			}
 
+			// 构建 SSO 服务实例，组装所需的会话与运行参数。
 			var sso SSOService = &Sso{
 				Profile:        profile,
 				SsoSessionName: ssoFlags.SsoSessionName,
 				StartURL:       ssoSession.StartURL,
 				Region:         ssoSession.Region,
 				Scopes:         ssoSession.RegistrationScopes,
-				UseDeviceCode:  true,
+				UseDeviceCode:  true, // 目前仅支持设备码登录流程。
 				NoBrowser:      noBrowser,
 			}
 
+			// 执行 SSO 授权流程并落盘 profile 配置。
 			if err := sso.SetProfile(); err != nil {
 				return err
 			}
@@ -539,6 +580,7 @@ func newConfigureSsoCmd() *cobra.Command {
 	return cmd
 }
 
+// readLineAllowEmpty 从标准输入读取一行，允许空输入并去除首尾空白。
 func readLineAllowEmpty() (string, error) {
 	reader := bufio.NewReader(os.Stdin)
 	line, err := reader.ReadString('\n')
@@ -555,8 +597,12 @@ type sessionOption struct {
 
 var errSessionExists = errors.New("SSO session already exists")
 
+// promptSessionName 获取 SSO 会话名称：
+// - 若配置中无会话，直接提示输入并校验非空；
+// - 若已有会话，进入交互式选择/创建流程。
 func promptSessionName(cfg *Configure, defaultName string) (string, *SsoSession, error) {
 	if cfg == nil || len(cfg.SsoSession) == 0 {
+		// 没有任何已存在的会话时，直接使用简单输入流程。
 		fmt.Print("Please enter SSO session name:")
 		name, err := readLineAllowEmpty()
 		if err != nil {
@@ -578,6 +624,7 @@ func promptSessionName(cfg *Configure, defaultName string) (string, *SsoSession,
 	return selectedName, selectedSession, nil
 }
 
+// buildSessionOptions 将会话映射转换为稳定排序的选项列表，便于交互式展示。
 func buildSessionOptions(all map[string]*SsoSession) []sessionOption {
 	var keys []string
 	for name := range all {
@@ -596,6 +643,10 @@ func buildSessionOptions(all map[string]*SsoSession) []sessionOption {
 
 const addNewSessionLabel = "<Create new session>"
 
+// runSessionSelect 使用 promptui 提供交互式会话选择：
+// - 支持搜索过滤；
+// - 可选择“创建新会话”；
+// - 返回最终选中的会话名称与对象（新建时对象为 nil）。
 func runSessionSelect(cfg *Configure, options []sessionOption, defaultName string) (string, *SsoSession, error) {
 	choices := make([]sessionOption, 0, len(options)+1)
 	choices = append(choices, options...)
@@ -610,6 +661,7 @@ func runSessionSelect(cfg *Configure, options []sessionOption, defaultName strin
 		lastSearchInput = rawInput
 		lowerInput := strings.ToLower(rawInput)
 		item := choices[index]
+		// 始终展示“创建新会话”选项，方便直接新增。
 		if item.Name == addNewSessionLabel {
 			return true
 		}
@@ -653,6 +705,7 @@ Scopes: {{ sessionScopes .Session }}`,
 
 	chosen := choices[idx]
 	if chosen.Name == addNewSessionLabel {
+		// 新建会话名称：优先使用默认值，其次使用最近一次的搜索输入。
 		defaultNewName := strings.TrimSpace(defaultName)
 		if defaultNewName == "" {
 			defaultNewName = lastSearchInput
@@ -681,6 +734,8 @@ Scopes: {{ sessionScopes .Session }}`,
 	return chosen.Name, chosen.Session, nil
 }
 
+// buildPromptFuncMap 扩展 promptui 模板函数：
+// 用于渲染会话列表中的“是否新建/区域/URL/Scopes”等字段。
 func buildPromptFuncMap() template.FuncMap {
 	fm := template.FuncMap{}
 	for k, v := range promptui.FuncMap {
@@ -710,11 +765,14 @@ func buildPromptFuncMap() template.FuncMap {
 	return fm
 }
 
+// createSsoSessionInSso 在 SSO 会话不存在时创建新会话并写入配置文件。
+// 该流程采用交互式输入，完成 StartURL、Region 与 Scopes 的采集与校验。
 func createSsoSessionInSso(sessionName string, cfg *Configure) (*SsoSession, error) {
 	newSession := &SsoSession{
 		Name: sessionName,
 	}
 
+	// 依次采集必须字段：StartURL 必填，Region 支持默认值回填。
 	if err := promptForRequiredStringWithDefault(&newSession.StartURL, "Please enter SSO start URL:", "SSO start URL", ""); err != nil {
 		return nil, err
 	}
@@ -722,14 +780,17 @@ func createSsoSessionInSso(sessionName string, cfg *Configure) (*SsoSession, err
 		return nil, err
 	}
 
+	// 读取并规范化 scopes，保证值合法且无重复。
 	scopes, err := promptForRegistrationScopes(newSession.RegistrationScopes)
 	if err != nil {
 		return nil, err
 	}
 	newSession.RegistrationScopes = scopes
 
+	// 将新会话保存到内存配置。
 	cfg.SsoSession[sessionName] = newSession
 
+	// 写入配置文件，确保会话持久化。
 	if err := WriteConfigToFile(cfg); err != nil {
 		return nil, fmt.Errorf("failed to save SSO session configuration: %v", err)
 	}

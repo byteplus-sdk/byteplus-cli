@@ -4,4 +4,7 @@
 doc
 .idea
 byteplus-cli
-bp
+/bp
+/bp.exe
+/npm/checksum
+/node_modules

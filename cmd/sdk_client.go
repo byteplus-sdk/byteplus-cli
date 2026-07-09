@@ -36,8 +36,9 @@ import (
 )
 
 type SdkClient struct {
-	Config  *byteplus.Config
-	Session *session.Session
+	Config      *byteplus.Config
+	Session     *session.Session
+	DebugLogger *DebugLogger
 }
 
 type SdkClientInfo struct {
@@ -48,23 +49,37 @@ type SdkClientInfo struct {
 	ContentType string
 }
 
+// NewSimpleClient creates an SDK client with credential resolution:
+//  1. If a profile is configured:
+//     a. SSO mode: CLI refreshes STS credentials (EnsureValidStsToken), then delegates to SDK CliProvider.
+//     b. Console Login mode: CLI refreshes the login cache, then delegates to SDK CliProvider.
+//     c. Other modes: directly delegates to SDK CliProvider for credential resolution.
+//  2. If no profile is configured, use the SDK default credential chain (Env → OIDC → CliProvider → EcsRole).
 func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	var (
-		creds                              *credentials.Credentials
-		region, endpoint, endpointResolver string
-		disableSSl, useDualStack           bool
+		creds            *credentials.Credentials
+		region, endpoint string
+		endpointResolver string
+		httpProxy        string
+		httpsProxy       string
+		disableSSl       bool
+		useDualStack     bool
 	)
 	if ctx == nil || ctx.fixedFlags == nil {
 		return nil, fmt.Errorf("invalid context for creating sdk client")
 	}
-
 	var currentProfile *Profile
 	profileName := ""
+	profileSource := "default-chain"
 	if ctx.config != nil {
-		profileName = ctx.config.Current
+		// profile selection priority: ---profile > Current > env.
+		// Empty Current with no env does NOT fall back to a default profile;
+		// it goes to the default credential chain instead.
+		profileName, profileSource = defaultProfileNameWithSource(ctx.config)
 		overrideProfile := false
 		if f := ctx.fixedFlags.GetByName("profile"); f != nil && f.GetValue() != "" {
 			profileName = f.GetValue()
+			profileSource = "flag"
 			overrideProfile = true
 		}
 		currentProfile = ctx.config.Profiles[profileName]
@@ -73,12 +88,59 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		}
 	}
 
-	if currentProfile == nil {
+	if currentProfile != nil {
+		// SSO 模式：CLI 负责刷新凭证并写回 config.json，再交给 SDK CliProvider 读取
+		if strings.ToLower(strings.TrimSpace(currentProfile.Mode)) == ModeSSO {
+			sso := &Sso{
+				Profile:        currentProfile,
+				SsoSessionName: currentProfile.SsoSessionName,
+				Region:         currentProfile.Region,
+			}
+			if err := sso.EnsureValidStsToken(ctx); err != nil {
+				return nil, err
+			}
+		}
+
+		if strings.ToLower(strings.TrimSpace(currentProfile.Mode)) == ModeConsoleLogin {
+			// Console Login 模式：CLI 负责刷新 login cache，再交给 SDK CliProvider 读取
+			_, err := EnsureValidLoginToken(ctx.config, profileName)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		// 所有模式统一委托 SDK CliProvider 解析凭证
+		creds = clicreds.NewCliCredentials("", profileName)
+
+		region = currentProfile.Region
+		if region == "" {
+			region = os.Getenv("BYTEPLUS_REGION")
+		}
+		endpoint = currentProfile.Endpoint
+		if endpoint == "" {
+			endpoint = os.Getenv("BYTEPLUS_ENDPOINT")
+		}
+		endpointResolver = currentProfile.EndpointResolver
+		if endpointResolver == "" {
+			endpointResolver = os.Getenv("BYTEPLUS_ENDPOINT_RESOLVER")
+		}
+		httpProxy = currentProfile.HTTPProxy
+		httpsProxy = currentProfile.HTTPSProxy
+		if currentProfile.DisableSSL != nil {
+			disableSSl = *currentProfile.DisableSSL
+		}
+		if currentProfile.UseDualStack != nil {
+			useDualStack = *currentProfile.UseDualStack
+		}
+	} else {
+		// 禁用默认凭证链
 		if os.Getenv("BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS") == "true" {
 			return nil, fmt.Errorf("no profile configured and default credential chain is disabled (BYTEPLUS_DISABLE_DEFAULT_CREDENTIALS=true)")
 		}
-		// 无 active profile 时交给 SDK 默认凭证链：Env -> OIDC -> CLI profile -> ECS role。
+
+		// 无 profile，使用 SDK 默认凭证链（Env → OIDC → CliProvider → EcsRole）
 		creds = defaults.NewDefaultCredentialProvider()
+
 		region = os.Getenv("BYTEPLUS_REGION")
 		endpoint = os.Getenv("BYTEPLUS_ENDPOINT")
 		endpointResolver = os.Getenv("BYTEPLUS_ENDPOINT_RESOLVER")
@@ -90,44 +152,23 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 		if dualStack == "true" || dualStack == "false" {
 			useDualStack, _ = strconv.ParseBool(dualStack)
 		}
-	} else {
-		mode := strings.ToLower(strings.TrimSpace(currentProfile.Mode))
-		if mode == ModeSSO {
-			// SSO 的 STS 缓存由 CLI 负责刷新并写回 config，再由 SDK CliProvider 读取。
-			sso := &Sso{
-				Profile:        currentProfile,
-				SsoSessionName: currentProfile.SsoSessionName,
-				Region:         currentProfile.Region,
-			}
-			if err := sso.EnsureValidStsToken(ctx); err != nil {
-				return nil, err
-			}
-		}
-
-		if mode == ModeConsoleLogin {
-			// console-login 只由 CLI 负责刷新本地登录缓存；最终凭证统一交给 SDK CliProvider 读取。
-			_, err := EnsureValidLoginToken(ctx.config, profileName)
-			if err != nil {
-				return nil, err
-			}
-		}
-		creds = clicreds.NewCliCredentials("", profileName)
-
-		region = currentProfile.Region
-		endpoint = currentProfile.Endpoint
-		endpointResolver = currentProfile.EndpointResolver
-		if currentProfile.DisableSSL != nil {
-			disableSSl = *currentProfile.DisableSSL
-		}
-		if currentProfile.UseDualStack != nil {
-			useDualStack = *currentProfile.UseDualStack
-		}
 	}
 
+	// ---region 运行时覆盖 region
 	if f := ctx.fixedFlags.GetByName("region"); f != nil && f.GetValue() != "" {
 		region = f.GetValue()
 	}
+
+	// ---endpoint 运行时覆盖 endpoint
+	if f := ctx.fixedFlags.GetByName("endpoint"); f != nil && f.GetValue() != "" {
+		endpoint = f.GetValue()
+		endpointResolver = ""
+	}
+
 	if region == "" {
+		if currentProfile == nil && !hasLocalCredentialSignal() {
+			return nil, fmt.Errorf("credentials not configured, please run 'bp login' or 'bp configure set', or set BYTEPLUS_ACCESS_KEY and BYTEPLUS_SECRET_KEY environment variables")
+		}
 		return nil, fmt.Errorf("region not set, please set it via profile, ---region flag, or BYTEPLUS_REGION environment variable")
 	}
 
@@ -153,13 +194,115 @@ func NewSimpleClient(ctx *Context) (*SdkClient, error) {
 	if useDualStack {
 		config.WithUseDualStack(true)
 	}
+	if httpProxy != "" {
+		config.WithHTTPProxy(httpProxy)
+	}
+	if httpsProxy != "" {
+		config.WithHTTPSProxy(httpsProxy)
+	}
+
+	debugLogClientConfig(ctx, debugClientConfig{
+		ProfileName:          profileName,
+		ProfileSource:        profileSource,
+		CredentialMode:       debugCredentialMode(currentProfile),
+		Region:               region,
+		Endpoint:             endpoint,
+		EndpointResolver:     endpointResolver,
+		DisableSSL:           disableSSl,
+		UseDualStack:         useDualStack,
+		HTTPProxyConfigured:  httpProxy != "",
+		HTTPSProxyConfigured: httpsProxy != "",
+	})
 
 	sess, _ := session.NewSession(config)
 
 	return &SdkClient{
-		Config:  config,
-		Session: sess,
+		Config:      config,
+		Session:     sess,
+		DebugLogger: debugLoggerFromContext(ctx),
 	}, nil
+}
+
+// hasLocalCredentialSignal reports whether any local credential signal exists
+// for the SDK default credential chain (Env → OIDC → CliProvider → EcsRole).
+func hasLocalCredentialSignal() bool {
+	if os.Getenv("BYTEPLUS_ACCESS_KEY") != "" || os.Getenv("BYTEPLUS_ACCESS_KEY_ID") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_OIDC_TOKEN_FILE") != "" || os.Getenv("BYTEPLUS_OIDC_ROLE_TRN") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_PROFILE") != "" || os.Getenv("BYTEPLUS_CLI_PROFILE") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_ECS_METADATA") != "" {
+		return true
+	}
+	if os.Getenv("BYTEPLUS_CONTAINER_CREDENTIALS_FULL_URI") != "" {
+		return true
+	}
+	return false
+}
+
+func defaultProfileName(cfg *Configure) string {
+	name, _ := defaultProfileNameWithSource(cfg)
+	return name
+}
+
+func defaultProfileNameWithSource(cfg *Configure) (string, string) {
+	if cfg != nil && cfg.Current != "" {
+		return cfg.Current, "current"
+	}
+	if profile := os.Getenv("BYTEPLUS_PROFILE"); profile != "" {
+		return profile, "env:BYTEPLUS_PROFILE"
+	}
+	if profile := os.Getenv("BYTEPLUS_CLI_PROFILE"); profile != "" {
+		return profile, "env:BYTEPLUS_CLI_PROFILE"
+	}
+	return "", "default-chain"
+}
+
+type debugClientConfig struct {
+	ProfileName          string
+	ProfileSource        string
+	CredentialMode       string
+	Region               string
+	Endpoint             string
+	EndpointResolver     string
+	DisableSSL           bool
+	UseDualStack         bool
+	HTTPProxyConfigured  bool
+	HTTPSProxyConfigured bool
+}
+
+func debugCredentialMode(profile *Profile) string {
+	if profile == nil {
+		return "default-chain"
+	}
+	mode := strings.ToLower(strings.TrimSpace(profile.Mode))
+	if mode == "" {
+		return ModeAK
+	}
+	return mode
+}
+
+func debugLogClientConfig(ctx *Context, info debugClientConfig) {
+	logger := debugLoggerFromContext(ctx)
+	if logger == nil || !logger.Enabled() {
+		return
+	}
+	logger.Printf("client_config profile_source=%s profile=%s credential_mode=%s region=%s endpoint=%s endpoint_resolver=%s disable_ssl=%t use_dual_stack=%t http_proxy_configured=%t https_proxy_configured=%t",
+		info.ProfileSource,
+		info.ProfileName,
+		info.CredentialMode,
+		info.Region,
+		info.Endpoint,
+		info.EndpointResolver,
+		info.DisableSSL,
+		info.UseDualStack,
+		info.HTTPProxyConfigured,
+		info.HTTPSProxyConfigured,
+	)
 }
 
 func (s *SdkClient) initClient(svc string, version string) *client.Client {
@@ -183,6 +326,7 @@ func (s *SdkClient) initClient(svc string, version string) *client.Client {
 	c.Handlers.Unmarshal.PushBackNamed(byteplusquery.UnmarshalHandler)
 	c.Handlers.UnmarshalMeta.PushBackNamed(byteplusquery.UnmarshalMetaHandler)
 	c.Handlers.UnmarshalError.PushBackNamed(byteplusquery.UnmarshalErrorHandler)
+	s.addDebugRequestAttemptHandler(c)
 
 	return c
 }

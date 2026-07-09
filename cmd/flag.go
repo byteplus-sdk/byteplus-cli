@@ -51,6 +51,14 @@ func (fs *FlagSet) GetFlags() []*Flag {
 	return fs.flags
 }
 
+// GetByName 返回指定名称的 flag；不存在时返回 nil，便于运行时覆盖参数按需读取。
+func (fs *FlagSet) GetByName(name string) *Flag {
+	if fs == nil {
+		return nil
+	}
+	return fs.index["--"+name]
+}
+
 func (fs *FlagSet) AddFlag(f *Flag) {
 	if f.Name != "" {
 		key := "--" + f.Name
@@ -71,9 +79,4 @@ func (fs *FlagSet) AddByName(name string) (*Flag, error) {
 	}
 	fs.AddFlag(f)
 	return f, nil
-}
-
-// GetByName 返回指定名称的 flag；不存在时返回 nil，便于运行时覆盖参数按需读取。
-func (fs *FlagSet) GetByName(name string) *Flag {
-	return fs.index["--"+name]
 }

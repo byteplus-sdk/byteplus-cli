@@ -28,7 +28,14 @@ then
  git checkout -b "$urlBranch" origin/"$urlBranch"
  cd ..
 fi
-go-bindata -pkg asset  -o asset/asset.go byteplus-sdk-metadata/metadata/...
+if ! go run ./scripts/generate_explorer_descriptions.go --metadata-dir byteplus-sdk-metadata/metadata --out byteplus-sdk-metadata/explorer_descriptions/descriptions.json
+then
+  echo "skip explorer descriptions generation"
+  mkdir -p byteplus-sdk-metadata/explorer_descriptions
+  printf '{}\n' > byteplus-sdk-metadata/explorer_descriptions/descriptions.json
+fi
+
+go-bindata -pkg asset  -o asset/asset.go byteplus-sdk-metadata/metadata/... byteplus-sdk-metadata/explorer_descriptions/...
 go-bindata -pkg typeset  -o typeset/typeset.go byteplus-sdk-metadata/metatype/...
 go-bindata -pkg structset  -o structset/structset.go byteplus-sdk-metadata/structure/...
 
