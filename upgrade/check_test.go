@@ -586,9 +586,7 @@ func TestSameLocalCalendarDay(t *testing.T) {
 func TestNoticeAlreadyClaimedToday(t *testing.T) {
 	now := time.Now()
 	y, m, d := now.In(time.Local).Date()
-	// Local midnight is on the same calendar day and cannot be more than
-	// one hour ahead of now, so it never trips the future-timestamp guard
-	// (the old 10:00 fixture failed whenever the test ran before 09:00).
+	// Midnight is always in the past, so this fixture cannot trip the future guard.
 	today := time.Date(y, m, d, 0, 0, 0, 0, time.Local).Unix()
 	yesterday := time.Date(y, m, d-1, 0, 0, 0, 0, time.Local).Unix()
 	future := now.Add(2 * time.Hour).Unix()
