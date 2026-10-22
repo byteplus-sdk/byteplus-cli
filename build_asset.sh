@@ -228,7 +228,9 @@ bindata_param_descriptions() {
   echo "==> go-bindata paramdescriptions (${PARAM_DESC_JSON} → ${PARAM_DESC_BINDATA})"
   (
     cd "${PARAM_DESC_DIR}"
-    go-bindata -pkg paramdescriptions -prefix . -o bindata.go params.json || exit $?
+    # No -prefix: go-bindata 4.x strips the whole basename with "-prefix .",
+    # producing an empty asset key; plain input keeps the "params.json" key.
+    go-bindata -pkg paramdescriptions -o bindata.go params.json || exit $?
     gofmt -w bindata.go || exit $?
   )
 }
