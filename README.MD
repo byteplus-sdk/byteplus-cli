@@ -120,11 +120,15 @@ bp configure get --profile [profile_name]
 
 If omitted, current profile is shown. If profile doesn't exist, default values are returned.
 
+Credential values are masked by default: `secret-key` and `session-token` are shown as `***MASKED***`, and `access-key` keeps only its last 4 characters. To display the original values, add `--show-sensitive`.
+
 ##### List All Profiles
 
 ```shell
 bp configure list
 ```
+
+`bp configure list` masks credential values in the same way; add `--show-sensitive` to display the original values.
 
 ##### Switch Active Profile (>= v1.0.16)
 

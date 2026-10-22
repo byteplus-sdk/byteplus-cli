@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"os"
 	"path/filepath"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/byteplus-sdk/byteplus-go-sdk-v2/byteplus/credentials/clicreds"
+	"github.com/spf13/cobra"
 )
 
 func resetProfileFlagsForTest(t *testing.T) {
@@ -828,5 +830,249 @@ func TestCliProviderContractConsoleLoginModeRecognized(t *testing.T) {
 	}
 	if !strings.Contains(err.Error(), "console-login token cache") {
 		t.Fatalf("expected console-login provider cache error, got: %v", err)
+	}
+}
+
+// --------------- configure get/list: credential masking ---------------
+
+const (
+	maskTestAccessKey       = "AKAPsensitiveaccesskey1234"
+	maskTestMaskedAccessKey = "****************1234"
+	maskTestSecretKey       = "sensitive-secret-key"
+	maskTestSessionToken    = "sensitive-session-token"
+	maskTestLoginSession    = "trn:byteplus:iam:ap-southeast-1:2100123456:login/session"
+
+	// secret-key and session-token are the two fields that are fully masked.
+	maskTestFullyMaskedFields = 2
+)
+
+func sensitiveConfigureTestConfig() *Configure {
+	return &Configure{
+		Current: "secure",
+		Profiles: map[string]*Profile{
+			"secure": {
+				Name:         "secure",
+				Mode:         ModeAK,
+				AccessKey:    maskTestAccessKey,
+				SecretKey:    maskTestSecretKey,
+				SessionToken: maskTestSessionToken,
+				LoginSession: maskTestLoginSession,
+				Region:       "ap-southeast-1",
+			},
+		},
+	}
+}
+
+func assertSensitiveConfigureOutput(t *testing.T, output string, wantSensitive bool) {
+	t.Helper()
+
+	// login-session is a session identifier rather than a credential, so it is
+	// always displayed.
+	if !strings.Contains(output, maskTestLoginSession) {
+		t.Fatalf("output should retain the login-session identifier:\n%s", output)
+	}
+
+	// access-key keeps only its last 4 characters unless --show-sensitive is set.
+	if got := strings.Contains(output, maskTestAccessKey); got != wantSensitive {
+		t.Fatalf("access-key full value visibility = %t, want %t:\n%s", got, wantSensitive, output)
+	}
+	if got := strings.Contains(output, `"`+maskTestMaskedAccessKey+`"`); got == wantSensitive {
+		t.Fatalf("access-key partially masked value visibility = %t, want %t:\n%s", got, !wantSensitive, output)
+	}
+
+	for _, secret := range []string{maskTestSecretKey, maskTestSessionToken} {
+		if got := strings.Contains(output, secret); got != wantSensitive {
+			t.Fatalf("sensitive value %q visibility = %t, want %t:\n%s", secret, got, wantSensitive, output)
+		}
+	}
+
+	maskedCount := strings.Count(output, `"`+maskedConfigValue+`"`)
+	if wantSensitive && maskedCount != 0 {
+		t.Fatalf("unmasked output contains %d masking placeholders:\n%s", maskedCount, output)
+	}
+	if !wantSensitive && maskedCount != maskTestFullyMaskedFields {
+		t.Fatalf("masked output contains %d masking placeholders, want %d:\n%s", maskedCount, maskTestFullyMaskedFields, output)
+	}
+}
+
+func runConfigureCmdForTest(t *testing.T, cmd *cobra.Command, args []string) string {
+	t.Helper()
+	cmd.SetArgs(args)
+	var executeErr error
+	output := captureStdout(t, func() {
+		executeErr = cmd.Execute()
+	})
+	if executeErr != nil {
+		t.Fatalf("execute %v: %v", args, executeErr)
+	}
+	return output
+}
+
+func TestConfigureListMasksSensitiveValuesByDefault(t *testing.T) {
+	cfg := sensitiveConfigureTestConfig()
+	withTestCtxConfig(t, cfg)
+
+	output := runConfigureCmdForTest(t, newConfigureListCmd(), []string{})
+
+	assertSensitiveConfigureOutput(t, output, false)
+}
+
+func TestConfigureListShowSensitiveDisplaysSensitiveValues(t *testing.T) {
+	cfg := sensitiveConfigureTestConfig()
+	withTestCtxConfig(t, cfg)
+
+	output := runConfigureCmdForTest(t, newConfigureListCmd(), []string{"--show-sensitive"})
+
+	assertSensitiveConfigureOutput(t, output, true)
+}
+
+func TestConfigureGetMasksSensitiveValuesByDefault(t *testing.T) {
+	resetProfileFlagsForTest(t)
+	cfg := sensitiveConfigureTestConfig()
+	withTestCtxConfig(t, cfg)
+
+	output := runConfigureCmdForTest(t, newConfigureGetCmd(), []string{"--profile", "secure"})
+
+	assertSensitiveConfigureOutput(t, output, false)
+}
+
+func TestConfigureGetShowSensitiveDisplaysSensitiveValues(t *testing.T) {
+	resetProfileFlagsForTest(t)
+	cfg := sensitiveConfigureTestConfig()
+	withTestCtxConfig(t, cfg)
+
+	output := runConfigureCmdForTest(t, newConfigureGetCmd(), []string{"--profile", "secure", "--show-sensitive"})
+
+	assertSensitiveConfigureOutput(t, output, true)
+}
+
+func TestConfigureGetListDoNotMutateStoredProfile(t *testing.T) {
+	resetProfileFlagsForTest(t)
+	cfg := sensitiveConfigureTestConfig()
+	withTestCtxConfig(t, cfg)
+
+	runConfigureCmdForTest(t, newConfigureListCmd(), []string{})
+	runConfigureCmdForTest(t, newConfigureGetCmd(), []string{"--profile", "secure"})
+
+	stored := cfg.Profiles["secure"]
+	if stored.AccessKey != maskTestAccessKey || stored.SecretKey != maskTestSecretKey || stored.SessionToken != maskTestSessionToken {
+		t.Fatalf("display masking must not mutate the stored profile: %+v", stored)
+	}
+}
+
+func TestConfigureShowSensitiveFlagIsRegistered(t *testing.T) {
+	if flag := newConfigureGetCmd().Flags().Lookup("show-sensitive"); flag == nil || flag.DefValue != "false" {
+		t.Fatalf("configure get should define --show-sensitive defaulting to false, got %+v", flag)
+	}
+	if flag := newConfigureListCmd().Flags().Lookup("show-sensitive"); flag == nil || flag.DefValue != "false" {
+		t.Fatalf("configure list should define --show-sensitive defaulting to false, got %+v", flag)
+	}
+}
+
+func TestMaskConfigValue(t *testing.T) {
+	tests := []struct {
+		name     string
+		value    string
+		keepLast int
+		want     string
+	}{
+		{name: "empty stays empty", value: "", keepLast: 4, want: ""},
+		{name: "keepLast zero masks everything", value: "super-secret-value", keepLast: 0, want: maskedConfigValue},
+		{name: "negative keepLast masks everything", value: "super-secret-value", keepLast: -1, want: maskedConfigValue},
+		{name: "keeps last four", value: "AKAPabcdefghijklmnop1234", keepLast: 4, want: "****************1234"},
+		{name: "keeps last two", value: "abcdefghij", keepLast: 2, want: "****************ij"},
+		{name: "length equal to twice keepLast is fully masked", value: "12345678", keepLast: 4, want: maskedConfigValue},
+		{name: "length just above twice keepLast keeps tail", value: "123456789", keepLast: 4, want: "****************6789"},
+		{name: "short value is fully masked", value: "abc", keepLast: 4, want: maskedConfigValue},
+		{name: "value shorter than keepLast is fully masked", value: "ab", keepLast: 4, want: maskedConfigValue},
+		{name: "multibyte characters are not split", value: "密钥密钥密钥密钥密钥", keepLast: 4, want: "****************密钥密钥"},
+	}
+
+	for _, tt := range tests {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			if got := maskConfigValue(tt.value, tt.keepLast); got != tt.want {
+				t.Fatalf("maskConfigValue(%q, %d) = %q, want %q", tt.value, tt.keepLast, got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMaskConfigValuePaddingDoesNotRevealLength(t *testing.T) {
+	short := maskConfigValue("AKAP-0123456789", 4)
+	long := maskConfigValue("AKAP-0123456789-0123456789-0123456789", 4)
+	if len(short) != len(long) {
+		t.Fatalf("masked values leak length: %q (%d) vs %q (%d)", short, len(short), long, len(long))
+	}
+}
+
+func TestProfileMaskRulesAreValid(t *testing.T) {
+	// Every rule must point at a real JSON key of Profile; otherwise the masking
+	// would silently stop working after a field is renamed or mistyped.
+	knownFields := make(map[string]bool)
+	profileType := reflect.TypeOf(Profile{})
+	for i := 0; i < profileType.NumField(); i++ {
+		tag := strings.Split(profileType.Field(i).Tag.Get("json"), ",")[0]
+		if tag != "" && tag != "-" {
+			knownFields[tag] = true
+		}
+	}
+
+	seen := make(map[string]bool)
+	for _, rule := range profileMaskRules {
+		if !knownFields[rule.Field] {
+			t.Errorf("mask rule field %q is not a JSON key of Profile", rule.Field)
+		}
+		if seen[rule.Field] {
+			t.Errorf("mask rule field %q is declared more than once", rule.Field)
+		}
+		seen[rule.Field] = true
+		if rule.KeepLast < 0 {
+			t.Errorf("mask rule field %q has negative KeepLast %d", rule.Field, rule.KeepLast)
+		}
+	}
+
+	// These fields carry real credentials and must always have a rule.
+	for _, field := range []string{"access-key", "secret-key", "session-token"} {
+		if !seen[field] {
+			t.Errorf("credential field %q must have a mask rule", field)
+		}
+	}
+	// login-session is only a session identifier and should stay visible.
+	if seen["login-session"] {
+		t.Errorf("login-session is an identifier and should not be masked")
+	}
+}
+
+func TestProfileToDisplayMap(t *testing.T) {
+	profile := &Profile{
+		AccessKey:    maskTestAccessKey,
+		SecretKey:    maskTestSecretKey,
+		SessionToken: maskTestSessionToken,
+	}
+
+	masked := profile.ToDisplayMap(false)
+	if masked["access-key"] != maskTestMaskedAccessKey {
+		t.Fatalf("access-key = %v, want %q", masked["access-key"], maskTestMaskedAccessKey)
+	}
+	if masked["secret-key"] != maskedConfigValue || masked["session-token"] != maskedConfigValue {
+		t.Fatalf("secret-key/session-token should be fully masked: %v / %v", masked["secret-key"], masked["session-token"])
+	}
+	if profile.AccessKey != maskTestAccessKey || profile.SecretKey != maskTestSecretKey || profile.SessionToken != maskTestSessionToken {
+		t.Fatalf("ToDisplayMap must not mutate the stored profile: %+v", profile)
+	}
+
+	plain := profile.ToDisplayMap(true)
+	if plain["access-key"] != maskTestAccessKey || plain["secret-key"] != maskTestSecretKey || plain["session-token"] != maskTestSessionToken {
+		t.Fatalf("showSensitive=true should return the original values: %v", plain)
+	}
+}
+
+func TestProfileToDisplayMapKeepsEmptyValuesEmpty(t *testing.T) {
+	m := (&Profile{}).ToDisplayMap(false)
+	for _, rule := range profileMaskRules {
+		if value, ok := m[rule.Field]; ok && value != "" {
+			t.Fatalf("empty %s should stay empty, got %v", rule.Field, value)
+		}
 	}
 }

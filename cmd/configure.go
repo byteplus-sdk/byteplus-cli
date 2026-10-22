@@ -24,6 +24,7 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 
 	"github.com/byteplus-sdk/byteplus-cli/util"
@@ -47,6 +48,35 @@ const (
 
 	ConfigFile = "config.json"
 )
+
+const (
+	// maskedConfigValue replaces a value that is fully masked.
+	maskedConfigValue = "***MASKED***"
+
+	// maskedConfigPadding is the fixed number of asterisks printed when a value is
+	// partially masked. It does not depend on the real length, so the output never
+	// reveals how long the original value is.
+	maskedConfigPadding = 16
+)
+
+// maskRule describes how a profile field is hidden when `configure get/list`
+// prints a profile.
+type maskRule struct {
+	// Field is the JSON key of the profile field, for example "secret-key".
+	Field string
+	// KeepLast is the number of trailing characters left visible. 0 masks the
+	// whole value.
+	KeepLast int
+}
+
+// profileMaskRules lists the profile fields that are masked by default.
+// To mask another field, append a rule here and choose how many trailing
+// characters, if any, stay visible.
+var profileMaskRules = []maskRule{
+	{Field: "secret-key", KeepLast: 0},
+	{Field: "session-token", KeepLast: 0},
+	{Field: "access-key", KeepLast: 4},
+}
 
 type Configure struct {
 	Current     string                 `json:"current"`
@@ -348,7 +378,7 @@ func cloneProfile(profile *Profile) *Profile {
 	return &clone
 }
 
-func getConfigProfile(profileName string) error {
+func getConfigProfile(profileName string, showSensitive bool) error {
 	var (
 		exist          bool
 		currentProfile *Profile
@@ -371,15 +401,11 @@ func getConfigProfile(profileName string) error {
 		currentProfile = &Profile{}
 	}
 
-	if config == nil || !config.EnableColor {
-		util.ShowJson(currentProfile.ToMap(), false)
-	} else {
-		util.ShowJson(currentProfile.ToMap(), true)
-	}
+	util.ShowJson(currentProfile.ToDisplayMap(showSensitive), cfg.EnableColor)
 	return nil
 }
 
-func listConfigProfiles() error {
+func listConfigProfiles(showSensitive bool) error {
 	var (
 		cfg *Configure
 	)
@@ -392,7 +418,7 @@ func listConfigProfiles() error {
 
 	fmt.Printf("*** current profile: %v ***\n", ctx.config.Current)
 	for _, profile := range ctx.config.Profiles {
-		util.ShowJson(profile.ToMap(), config.EnableColor)
+		util.ShowJson(profile.ToDisplayMap(showSensitive), cfg.EnableColor)
 	}
 	return nil
 }
@@ -457,6 +483,42 @@ func (p *Profile) ToMap() map[string]interface{} {
 	json.Unmarshal(data, &m)
 
 	return m
+}
+
+// ToDisplayMap returns the profile as a map for display.
+// Unless showSensitive is true, the fields listed in profileMaskRules are masked.
+// Only the returned copy is changed; the profile itself is left untouched.
+func (p *Profile) ToDisplayMap(showSensitive bool) map[string]interface{} {
+	m := p.ToMap()
+	if showSensitive {
+		return m
+	}
+
+	for _, rule := range profileMaskRules {
+		if value, ok := m[rule.Field].(string); ok && value != "" {
+			m[rule.Field] = maskConfigValue(value, rule.KeepLast)
+		}
+	}
+	return m
+}
+
+// maskConfigValue masks value according to keepLast.
+//   - keepLast <= 0: the whole value is masked and maskedConfigValue is returned.
+//   - keepLast > 0: a fixed number of asterisks followed by the last keepLast
+//     characters is returned.
+//
+// If the value is no longer than 2*keepLast, showing its tail would expose most
+// of it, so it falls back to a full mask. The value is cut by rune so multibyte
+// characters are never split. An empty value is returned as is.
+func maskConfigValue(value string, keepLast int) string {
+	if value == "" {
+		return ""
+	}
+	runes := []rune(value)
+	if keepLast <= 0 || len(runes) <= keepLast*2 {
+		return maskedConfigValue
+	}
+	return strings.Repeat("*", maskedConfigPadding) + string(runes[len(runes)-keepLast:])
 }
 
 func (p *Profile) String() string {
